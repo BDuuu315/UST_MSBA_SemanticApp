@@ -18,7 +18,7 @@ from pinecone import Pinecone
 
 st.set_page_config(page_title="MSBA_Team2_SemanticSearch", layout="centered")
 
-st.title("Stop watching GuHao")
+st.title("Sementic Search App for BA Users")
 st.caption("Prototype for HKUST Business Analytics (ISOM6670G)")
 
 # ========================================================
