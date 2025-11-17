@@ -52,13 +52,10 @@ else:
         st.sidebar.button(f"{i+1}. {msg['query'][:20]}...")
 
 # --- 清除历史按钮 ---
-if st.sidebar.button("🗑️ Clear History"):
+if st.sidebar.button("Clear History"):
     st.session_state["chat_history"] = []
     st.sidebar.success("Chat history cleared!")
 
-st.sidebar.markdown("---")
-st.sidebar.markdown("[Get an OpenAI API Key](https://platform.openai.com/account/api-keys)")
-st.sidebar.markdown("[View Source on GitHub](https://github.com/yourusername/yourrepo)")
 
 st.title("Semantic Search AI App for BA Users")
 st.markdown("A Semantic Search App for ISOM 6670G.")
