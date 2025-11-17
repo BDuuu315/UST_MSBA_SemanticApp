@@ -1,16 +1,24 @@
 import streamlit as st
-import requests
-import json
 import random
 import os
 
-#First Page
+# ========= 页面配置 =========
+st.set_page_config(
+    page_title="Semantic Search AI Chat",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+# ========= Logo 样式 =========
 st.markdown(
     """
     <style>
+    [data-testid="stAppViewContainer"] {
+        position: relative;
+    }
     .logo { 
-        position: absolute;
-        top: 15px;
+        position: fixed;
+        top: 10px;
         left: 15px;
         z-index: 100; 
     }
@@ -20,17 +28,14 @@ st.markdown(
 )
 st.image("Logo_USTBusinessSchool.svg", width=120, output_format="SVG")
 
-st.set_page_config(
-    page_title="Semantic Search AI App for BA Users",
-    layout="centered",
-    initial_sidebar_state="collapsed"
-)
+# ========= Sidebar 部分 =========
+st.sidebar.title("⚙️ Control Panel")
 
 # --- 输入 OpenAI API Key ---
 openai_api_key = st.sidebar.text_input(
     "Enter your UST OpenAI API Key",
     type="password",
-    help="You can get you API Key via syllabus instruction"
+    help="Check ISOM 6670G Syllabus to set up HKUST OpenAI account and get your OpenAI API Key"
 )
 
 # 在 session_state 中保存
@@ -52,54 +57,51 @@ else:
         st.sidebar.button(f"{i+1}. {msg['query'][:20]}...")
 
 # --- 清除历史按钮 ---
-if st.sidebar.button("Clear History"):
+if st.sidebar.button("🗑️ Clear History"):
     st.session_state["chat_history"] = []
     st.sidebar.success("Chat history cleared!")
 
 
-st.title("Semantic Search AI App for BA Users")
-st.markdown("A Semantic Search App for ISOM 6670G.")
+# ========= 主体部分 =========
+st.title("Semantic Search AI Chat for BA Users")
+st.caption("A Semantic Search App prototype for ISOM 6670G.")
 
-st.subheader("What is your question?")
-user_query = st.text_input(
-    label="Enter your question:",
-    placeholder="e.g., Where is HKUST Business School",
-    help="Type your natural language question here."
-)
+st.subheader("Ask me anything related to HKUST Business School data 📚")
 
-# Button for Search
-if st.button("Search"):
-    if not user_query:
-        st.warning("Please enter a question before submitting.")
+# --- 输入框 ---
+user_query = st.chat_input("Type your question here...")
+
+if user_query:
+    if not st.session_state.get("OPENAI_API_KEY"):
+        st.error("⚠️ Please add your OpenAI API key in the sidebar first.")
     else:
-        #
-        payload = {"query": user_query}
+        st.session_state["chat_history"].append({"query": user_query})
 
-        st.info("Processing...")
+        with st.spinner("🔍 Processing your query..."):
+            # 模拟 Semantic 搜索结果 + 动态置信度
+            simulated_backend_output = {
+                "status": "success",
+                "semantic_answer": (
+                    "Our semantic engine retrieves and ranks documents "
+                    "based on meaning similarity using embeddings."
+                ),
+                "confidence": round(random.uniform(0.75, 0.99), 2)
+            }
 
-        # ------------------------------
-        # 调用
-        # ------------------------------
-        # ❗当有后端API时，放开下方注释：
-        # response = requests.post("http://localhost:8000/api/search", json=payload)
-        # result = response.json()
-
-        
-        simulated_backend_output = {
-            "status": "success",
-            "semantic_answer": "Our Semantic search works by comparing the meaning of entered question with document embeddings.",
-            "confidence": round(random.uniform(0.75, 0.99), 2)
-        }
-
-        # ------------------------------
-        # Result
-        # ------------------------------
         if simulated_backend_output["status"] == "success":
-            st.success("Query Processed Successfully!")
-            st.subheader("Semantic Result:")
-            st.write(simulated_backend_output["semantic_answer"])
-            st.caption(f"Confidence Score: {simulated_backend_output['confidence']}")
+            st.chat_message("user").write(user_query)
+            st.chat_message("assistant").write(simulated_backend_output["semantic_answer"])
+            st.caption(f"**Confidence Score:** {simulated_backend_output['confidence']}")
         else:
-            st.error("Backend returned an error. Please try again.")
+            st.error("Backend error. Please try again later.")
 
-
+# ========= 页脚 =========
+st.markdown("---")
+st.markdown(
+    """
+    <div style='text-align: center; color: gray; font-size: small;'>
+    © 2025 HKUST ISOM 6670G Semantic Search Demo | Streamlit Front End
+    </div>
+    """,
+    unsafe_allow_html=True
+)
