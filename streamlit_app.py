@@ -25,6 +25,15 @@ st.markdown(
         left: 15px;
         z-index: 100;
     }
+    /* 修复侧边栏滚动 */
+    section[data-testid="stSidebar"] {
+        height: 100vh;
+        overflow: auto;
+    }
+    section[data-testid="stSidebar"] > div {
+        padding-top: 2rem;
+        height: 100%;
+    }
     </style>
     """,
     unsafe_allow_html=True
