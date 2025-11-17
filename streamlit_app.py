@@ -65,7 +65,7 @@ if len(st.session_state["conversations"]) == 0:
 else:
     for i, title in enumerate(st.session_state["conversation_titles"]):
         # 限制标题长度，例如最多30个字符
-        max_length = 30
+        max_length = 20
         if len(title) > max_length:
             display_title = title[:max_length] + "..."
         else:
