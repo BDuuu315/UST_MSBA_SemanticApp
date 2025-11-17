@@ -5,7 +5,7 @@ import os
 # ========= 页面配置 =========
 st.set_page_config(
     page_title="Semantic Search AI Chat",
-    layout="wide",
+    layout="centered",
     initial_sidebar_state="expanded",
 )
 
@@ -57,7 +57,7 @@ else:
         st.sidebar.button(f"{i+1}. {msg['query'][:20]}...")
 
 # --- 清除历史按钮 ---
-if st.sidebar.button("🗑️ Clear History"):
+if st.sidebar.button("Clear History"):
     st.session_state["chat_history"] = []
     st.sidebar.success("Chat history cleared!")
 
@@ -66,18 +66,18 @@ if st.sidebar.button("🗑️ Clear History"):
 st.title("Semantic Search AI Chat for BA Users")
 st.caption("A Semantic Search App prototype for ISOM 6670G.")
 
-st.subheader("Ask me anything related to HKUST Business School data 📚")
+st.subheader("What is your question?")
 
 # --- 输入框 ---
 user_query = st.chat_input("Type your question here...")
 
 if user_query:
     if not st.session_state.get("OPENAI_API_KEY"):
-        st.error("⚠️ Please add your OpenAI API key in the sidebar first.")
+        st.error("Please add your OpenAI API key in the sidebar first.")
     else:
         st.session_state["chat_history"].append({"query": user_query})
 
-        with st.spinner("🔍 Processing your query..."):
+        with st.spinner("Processing..."):
             # 模拟 Semantic 搜索结果 + 动态置信度
             simulated_backend_output = {
                 "status": "success",
@@ -96,12 +96,12 @@ if user_query:
             st.error("Backend error. Please try again later.")
 
 # ========= 页脚 =========
-st.markdown("---")
-st.markdown(
-    """
-    <div style='text-align: center; color: gray; font-size: small;'>
-    © 2025 HKUST ISOM 6670G Semantic Search Demo | Streamlit Front End
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+#st.markdown("---")
+#st.markdown(
+#    """
+#    <div style='text-align: center; color: gray; font-size: small;'>
+#    © 2025 HKUST ISOM 6670G Semantic Search Demo | Streamlit Front End
+#    </div>
+#    """,
+#    unsafe_allow_html=True
+#)
