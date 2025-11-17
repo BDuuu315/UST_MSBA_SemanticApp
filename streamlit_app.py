@@ -53,70 +53,71 @@ def get_azure_client(api_key):
 
 
 # ========= UI =========
-st.sidebar.title("Chat Sidebar")
+with st.sidebar
+    st.title("Chat Sidebar")
 
 
 # --- 输入 API Key ---
-api_key = st.sidebar.text_input(
-    "Enter your HKUST OpenAI API Key",
-    type="password",
-    help="You can check ISOM 6670G syllabus to get set-up instructions."
-)
-if api_key:
-    st.session_state["OPENAI_API_KEY"] = api_key
-
-st.sidebar.markdown("---")
+    api_key = st.text_input(
+        "Enter your HKUST OpenAI API Key",
+        type="password",
+        help="You can check ISOM 6670G syllabus to get set-up instructions."
+    )
+    if api_key:
+        st.session_state["OPENAI_API_KEY"] = api_key
+    
+    st.markdown("---")
 
 # --- 新建会话按钮 ---
-if st.sidebar.button("🆕 New Chat", use_container_width=True):
-    st.session_state["conversations"].append([])
-    st.session_state["conversation_titles"].append("New Chat")
-    st.session_state["active_chat_index"] = len(st.session_state["conversations"]) - 1
-
-# ---- search configuration ----
-st.sidebar.subheader("Search Configuration")
-top_k = st.slider(
-    "Number of documents to return", 
-    min_value=1, 
-    max_value=10, 
-    value=3
-)
-
-# --- 清除所有历史按钮  ---
-if st.sidebar.button("🗑️ Clear All History", use_container_width=True):
-    st.session_state["conversations"].clear()
-    st.session_state["conversation_titles"].clear()
-    st.session_state["active_chat_index"] = None
-    st.rerun()
-
-# --- 历史列表 ---
-st.sidebar.subheader("History")
-
-if len(st.session_state["conversations"]) == 0:
-    st.sidebar.info("No history yet. Click 'New Chat' to start.")
-else:
-    for i, title in enumerate(st.session_state["conversation_titles"]):
-        max_length = 20
-        if len(title) > max_length:
-            display_title = title[:max_length] + "..."
-        else:
-            display_title = title
-
-        if i == st.session_state["active_chat_index"]:
-            st.sidebar.button(f"📍 {display_title}", key=f"chat_active_{i}", disabled=True, use_container_width=True)
-        else:
-            if st.sidebar.button(f"💬 {display_title}", key=f"chat_{i}", use_container_width=True):
-                st.session_state["active_chat_index"] = i
-
-# ---- Usage tips ----
-st.sidebar.markdown("---")
-st.sidebar.subheader("Usage Tips")
-st.sidebar.info("""
-- Enter complete question statements
-- More specific questions yield more accurate results
-- Supports both Chinese and English queries
-- System generates answers based on relevant documents
-""")
+    if st.button("🆕 New Chat", use_container_width=True):
+        st.session_state["conversations"].append([])
+        st.session_state["conversation_titles"].append("New Chat")
+        st.session_state["active_chat_index"] = len(st.session_state["conversations"]) - 1
+    
+    # ---- search configuration ----
+    st.subheader("Search Configuration")
+    top_k = st.slider(
+        "Number of documents to return", 
+        min_value=1, 
+        max_value=10, 
+        value=3
+    )
+    
+    # --- 清除所有历史按钮  ---
+    if st.button("Clear All History", use_container_width=True):
+        st.session_state["conversations"].clear()
+        st.session_state["conversation_titles"].clear()
+        st.session_state["active_chat_index"] = None
+        st.rerun()
+    
+    # --- 历史列表 ---
+    st.header("History")
+    
+    if len(st.session_state["conversations"]) == 0:
+        st.info("No history yet. Click 'New Chat' to start.")
+    else:
+        for i, title in enumerate(st.session_state["conversation_titles"]):
+            max_length = 20
+            if len(title) > max_length:
+                display_title = title[:max_length] + "..."
+            else:
+                display_title = title
+    
+            if i == st.session_state["active_chat_index"]:
+                st.button(f"📍 {display_title}", key=f"chat_active_{i}", disabled=True, use_container_width=True)
+            else:
+                if st.button(f"💬 {display_title}", key=f"chat_{i}", use_container_width=True):
+                    st.session_state["active_chat_index"] = i
+    
+    # ---- Usage tips ----
+    st.markdown("---")
+    st.header("Usage Tips")
+    st.info("""
+    - Enter complete question statements
+    - More specific questions yield more accurate results
+    - Supports both Chinese and English queries
+    - System generates answers based on relevant documents
+    """)
 
 # ========= 主体部分 =========
 st.title("Semantic Search AI Chat for BA Users")
