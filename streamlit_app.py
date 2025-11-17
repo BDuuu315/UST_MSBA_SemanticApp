@@ -75,6 +75,7 @@ if st.sidebar.button("Clear All History"):
     st.session_state["conversations"].clear()
     st.session_state["conversation_titles"].clear()
     st.session_state["active_chat_index"] = None
+    st.experimental_rerun()
     st.sidebar.success("Cleared all chat history successfully!")
 
 st.sidebar.markdown("---")
