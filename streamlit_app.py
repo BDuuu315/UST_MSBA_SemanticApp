@@ -56,7 +56,6 @@ if st.button("Search"):
         simulated_backend_output = {
             "status": "success",
             "semantic_answer": "Our Semantic search works by comparing the meaning of entered question with document embeddings.",
-            "confidence": 0.92
         }
 
         # ------------------------------
