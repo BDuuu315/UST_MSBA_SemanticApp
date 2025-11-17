@@ -73,7 +73,7 @@ st.caption("A Semantic Search App prototype for ISOM 6670G.")
 # 如果点击了历史记录按钮，显示内容
 if st.session_state["active_chat_index"] is not None:
     selected = st.session_state["chat_history"][st.session_state["active_chat_index"]]
-    st.info(f"Viewing {st.session_state['active_chat_index'] + 1} History}")
+    st.info(f"Viewing {st.session_state['active_chat_index'] + 1} History")
     st.chat_message("user").write(selected["query"])
     st.chat_message("assistant").write(selected["answer"])
     st.caption(f"Confidence Score: {selected['confidence']}")
