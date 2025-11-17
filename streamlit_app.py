@@ -26,6 +26,40 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# --- 输入 OpenAI API Key ---
+openai_api_key = st.sidebar.text_input(
+    "🔑 Enter your OpenAI API Key",
+    type="password",
+    help="You can get one at https://platform.openai.com/account/api-keys"
+)
+
+# 在 session_state 中保存
+if openai_api_key:
+    st.session_state["OPENAI_API_KEY"] = openai_api_key
+
+# --- 聊天历史记录 ---
+if "chat_history" not in st.session_state:
+    st.session_state["chat_history"] = []
+
+st.sidebar.markdown("---")
+st.sidebar.subheader("💬 Chat History")
+
+# 如果有历史记录，则显示
+if len(st.session_state["chat_history"]) == 0:
+    st.sidebar.info("No chat history yet.")
+else:
+    for i, msg in enumerate(st.session_state["chat_history"]):
+        st.sidebar.button(f"{i+1}. {msg['query'][:20]}...")
+
+# --- 清除历史按钮 ---
+if st.sidebar.button("🗑️ Clear History"):
+    st.session_state["chat_history"] = []
+    st.sidebar.success("Chat history cleared!")
+
+st.sidebar.markdown("---")
+st.sidebar.markdown("[Get an OpenAI API Key](https://platform.openai.com/account/api-keys)")
+st.sidebar.markdown("[View Source on GitHub](https://github.com/yourusername/yourrepo)")
+
 st.title("Semantic Search AI App for BA Users")
 st.markdown("A Semantic Search App for ISOM 6670G.")
 
