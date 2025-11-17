@@ -103,6 +103,12 @@ else:
 st.title("Semantic Search AI Chat for BA Users")
 st.caption("A Semantic Search App prototype for ISOM 6670G.")
 
+if len(st.session_state["conversations"]) == 0:
+    st.session_state["conversations"].append([])
+    st.session_state["conversation_titles"].append("New Chat")
+    st.session_state["active_chat_index"] = 0
+    st.rerun()
+
 # --- 输入新消息 ---
 user_query = st.text_input(
     label="Enter your question:",
