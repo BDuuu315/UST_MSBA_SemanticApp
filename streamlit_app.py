@@ -53,7 +53,7 @@ def get_azure_client(api_key):
 
 
 # ========= UI =========
-with st.sidebar
+with st.sidebar:
     st.title("Chat Sidebar")
 
 
