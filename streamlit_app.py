@@ -16,9 +16,9 @@ from pinecone import Pinecone
 # ✅ 基础配置
 # ========================================================
 
-st.set_page_config(page_title="Stop watching GuHao", layout="centered")
+st.set_page_config(page_title="MSBA_Team2_SemanticSearch", layout="centered")
 
-st.title("🔍 Semantic Search + AI Chat (RAG)")
+st.title("Stop watching GuHao")
 st.caption("Prototype for HKUST Business Analytics (ISOM6670G)")
 
 # ========================================================
