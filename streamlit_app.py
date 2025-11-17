@@ -54,12 +54,6 @@ def get_azure_client(api_key):
 # ========= Sidebar =========
 st.sidebar.title("Chat Sidebar")
 
-# --- 清除所有历史按钮  ---
-if st.sidebar.button("🗑️ Clear All History", use_container_width=True):
-    st.session_state["conversations"].clear()
-    st.session_state["conversation_titles"].clear()
-    st.session_state["active_chat_index"] = None
-    st.rerun()
 
 # --- 输入 API Key ---
 api_key = st.sidebar.text_input(
@@ -77,6 +71,13 @@ if st.sidebar.button("🆕 New Chat", use_container_width=True):
     st.session_state["conversations"].append([])
     st.session_state["conversation_titles"].append("New Chat")
     st.session_state["active_chat_index"] = len(st.session_state["conversations"]) - 1
+
+# --- 清除所有历史按钮  ---
+if st.sidebar.button("🗑️ Clear All History", use_container_width=True):
+    st.session_state["conversations"].clear()
+    st.session_state["conversation_titles"].clear()
+    st.session_state["active_chat_index"] = None
+    st.rerun()
 
 # --- 历史列表 ---
 st.sidebar.subheader("History")
