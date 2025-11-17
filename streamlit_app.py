@@ -100,7 +100,7 @@ else:
                         "Our semantic engine retrieves and ranks documents "
                         "based on meaning similarity using embeddings."
                     ),
-                    "confidence": round(random.uniform(0.75, 0.99), 2)
+                    "confidence": round(random.uniform(0.75, 0.99), 2),
 
                     st.chat_message("user").write(user_query)
                     st.chat_message("assistant").write(simulated_answer)
