@@ -78,7 +78,7 @@ else:
 
         with cols[1]:
             # 🗑️ 单独删除按钮
-            if st.button("Delete", key=f"delete_{i}", help="Delete this chat"):
+            if st.button("🗑️", key=f"delete_{i}", help="Delete this chat"):
                 # 删除对应数据
                 del st.session_state["conversations"][i]
                 del st.session_state["conversation_titles"][i]
