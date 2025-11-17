@@ -71,26 +71,6 @@ if st.sidebar.button("New Chat"):
     st.session_state["conversation_titles"].append("New Chat")
     st.session_state["active_chat_index"] = len(st.session_state["conversations"]) - 1
 
-# ========= Sidebar =========
-st.sidebar.title("Chat Sidebar")
-
-# --- 输入 API Key ---
-api_key = st.sidebar.text_input(
-    "Enter your HKUST OpenAI API Key",
-    type="password",
-    help="You can check ISOM 6670G syllabus to get set-up instructions."
-)
-if api_key:
-    st.session_state["OPENAI_API_KEY"] = api_key
-
-st.sidebar.markdown("---")
-
-# --- 新建会话按钮 ---
-if st.sidebar.button("🆕 New Chat", use_container_width=True):
-    st.session_state["conversations"].append([])
-    st.session_state["conversation_titles"].append("New Chat")
-    st.session_state["active_chat_index"] = len(st.session_state["conversations"]) - 1
-
 # --- 历史列表 ---
 st.sidebar.subheader("History")
 
