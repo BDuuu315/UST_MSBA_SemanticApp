@@ -28,9 +28,9 @@ st.set_page_config(
 
 # --- 输入 OpenAI API Key ---
 openai_api_key = st.sidebar.text_input(
-    "🔑 Enter your OpenAI API Key",
+    "Enter your UST OpenAI API Key",
     type="password",
-    help="You can get one at https://platform.openai.com/account/api-keys"
+    help="You can get you API Key via syllabus instruction"
 )
 
 # 在 session_state 中保存
@@ -42,7 +42,7 @@ if "chat_history" not in st.session_state:
     st.session_state["chat_history"] = []
 
 st.sidebar.markdown("---")
-st.sidebar.subheader("💬 Chat History")
+st.sidebar.subheader("Chat History")
 
 # 如果有历史记录，则显示
 if len(st.session_state["chat_history"]) == 0:
@@ -87,7 +87,7 @@ if st.button("Search"):
         # response = requests.post("http://localhost:8000/api/search", json=payload)
         # result = response.json()
 
-        #
+        
         simulated_backend_output = {
             "status": "success",
             "semantic_answer": "Our Semantic search works by comparing the meaning of entered question with document embeddings.",
