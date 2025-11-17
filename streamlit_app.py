@@ -5,7 +5,7 @@ import random
 st.set_page_config(
     page_title="Semantic Search AI Chat",
     layout="centered",
-    initial_sidebar_state="wide",
+    initial_sidebar_state="expanded",
 )
 
 # ========= Logo 样式 =========
