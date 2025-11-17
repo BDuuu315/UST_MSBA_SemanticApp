@@ -29,7 +29,7 @@ st.markdown(
 st.image("Logo_USTBusinessSchool.svg", width=120, output_format="SVG")
 
 # ========= Sidebar 部分 =========
-st.sidebar.title("⚙️ Control Panel")
+st.sidebar.title("Sidebar")
 
 # --- 输入 OpenAI API Key ---
 openai_api_key = st.sidebar.text_input(
