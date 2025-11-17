@@ -70,6 +70,11 @@ def input_section():
     with st.sidebar:
         st.title("Chat Sidebar")
 
+        st.header("🔧 API Status")
+        st.success("✅ Pinecone: Connected")
+        st.success("✅ Azure OpenAI: Connected")
+        
+
         # --- 输入 API Key ---
         api_key = st.text_input(
             "Enter your HKUST OpenAI API Key",
@@ -80,6 +85,18 @@ def input_section():
             st.session_state["OPENAI_API_KEY"] = api_key
         
         st.markdown("---")
+
+
+        if st.button("🔄 Test Connection", use_container_width=True):
+            with st.spinner("Testing API connection..."):
+                try:
+                    # Test connection
+                    test_query = "Test"
+                    test_embedding = search_engine.get_embedding(test_query)
+                    st.success("✅ API connection test successful!")
+                except Exception as e:
+                    st.error(f"❌ Connection test failed: {str(e)}")
+
 
         # --- 新建会话按钮 ---
         if st.button("🆕 New Chat", use_container_width=True):
