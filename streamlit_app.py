@@ -52,7 +52,7 @@ if api_key:
 st.sidebar.markdown("---")
 
 # --- 新建会话按钮 ---
-if st.sidebar.button("➕ New Chat"):
+if st.sidebar.button("New Chat"):
     st.session_state["conversations"].append([])
     st.session_state["conversation_titles"].append("New Chat")
     st.session_state["active_chat_index"] = len(st.session_state["conversations"]) - 1
@@ -61,7 +61,7 @@ if st.sidebar.button("➕ New Chat"):
 st.sidebar.subheader("History")
 
 if len(st.session_state["conversations"]) == 0:
-    st.sidebar.info("No history yet. Click '➕ New Chat' to start.")
+    st.sidebar.info("No history yet. Click 'New Chat' to start.")
 else:
     for i, title in enumerate(st.session_state["conversation_titles"]):
         if i == st.session_state["active_chat_index"]:
@@ -104,7 +104,7 @@ for msg in current_chat:
 user_query = st.chat_input("Type your question here...")
 
 if user_query:
-    # ✅ 若没有 API key，不允许继续
+    # 若没有 API key，不允许继续
     if not st.session_state.get("OPENAI_API_KEY"):
         st.error("Please input your HKUST OpenAI API key in the sidebar first.")
         st.stop()
