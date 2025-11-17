@@ -64,7 +64,7 @@ if st.button("Search"):
         # ------------------------------
         if simulated_backend_output["status"] == "success":
             st.success("Query Processed Successfully!")
-            st.subheader("💡 Semantic Result:")
+            st.subheader("Semantic Result:")
             st.write(simulated_backend_output["semantic_answer"])
             st.caption(f"Confidence Score: {simulated_backend_output['confidence']}")
         else:
