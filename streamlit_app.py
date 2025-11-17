@@ -71,31 +71,61 @@ if st.sidebar.button("New Chat"):
     st.session_state["conversation_titles"].append("New Chat")
     st.session_state["active_chat_index"] = len(st.session_state["conversations"]) - 1
 
+# ========= Sidebar =========
+st.sidebar.title("Chat Sidebar")
+
+# --- 输入 API Key ---
+api_key = st.sidebar.text_input(
+    "Enter your HKUST OpenAI API Key",
+    type="password",
+    help="You can check ISOM 6670G syllabus to get set-up instructions."
+)
+if api_key:
+    st.session_state["OPENAI_API_KEY"] = api_key
+
+st.sidebar.markdown("---")
+
+# --- 新建会话按钮 ---
+if st.sidebar.button("🆕 New Chat", use_container_width=True):
+    st.session_state["conversations"].append([])
+    st.session_state["conversation_titles"].append("New Chat")
+    st.session_state["active_chat_index"] = len(st.session_state["conversations"]) - 1
+
 # --- 历史列表 ---
 st.sidebar.subheader("History")
 
 if len(st.session_state["conversations"]) == 0:
     st.sidebar.info("No history yet. Click 'New Chat' to start.")
 else:
-    for i, title in enumerate(st.session_state["conversation_titles"]):
-        max_length = 20
-        if len(title) > max_length:
-            display_title = title[:max_length] + "..."
-        else:
-            display_title = title
+    # 使用容器限制历史列表的高度
+    with st.sidebar.container():
+        for i, title in enumerate(st.session_state["conversation_titles"]):
+            max_length = 20
+            if len(title) > max_length:
+                display_title = title[:max_length] + "..."
+            else:
+                display_title = title
 
-        if i == st.session_state["active_chat_index"]:
-            st.sidebar.button(f"{display_title}", key=f"chat_active_{i}", disabled=True, use_container_width=True)
-        else:
-            if st.sidebar.button(display_title, key=f"chat_{i}", use_container_width=True):
-                st.session_state["active_chat_index"] = i
+            if i == st.session_state["active_chat_index"]:
+                st.sidebar.button(f"📍 {display_title}", key=f"chat_active_{i}", disabled=True, use_container_width=True)
+            else:
+                if st.sidebar.button(f"💬 {display_title}", key=f"chat_{i}", use_container_width=True):
+                    st.session_state["active_chat_index"] = i
 
-# --- 清空所有历史 ---
-if st.sidebar.button("Clear All History"):
+# --- 固定底部区域 ---
+st.sidebar.markdown("---")
+st.sidebar.markdown("### Management")
+
+# 在底部固定显示清除按钮
+if st.sidebar.button("🗑️ Clear All History", use_container_width=True, type="secondary"):
     st.session_state["conversations"].clear()
     st.session_state["conversation_titles"].clear()
     st.session_state["active_chat_index"] = None
     st.rerun()
+
+# 添加对话数量统计
+if len(st.session_state["conversations"]) > 0:
+    st.sidebar.caption(f"Total conversations: {len(st.session_state['conversations'])}")
 
 # ========= 主体部分 =========
 st.title("Semantic Search AI Chat for BA Users")
