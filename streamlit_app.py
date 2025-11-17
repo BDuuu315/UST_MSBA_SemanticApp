@@ -64,26 +64,16 @@ if len(st.session_state["conversations"]) == 0:
     st.sidebar.info("No history yet. Click 'New Chat' to start.")
 else:
     for i, title in enumerate(st.session_state["conversation_titles"]):
-        # 限制标题长度，例如最多30个字符
         max_length = 20
         if len(title) > max_length:
             display_title = title[:max_length] + "..."
         else:
             display_title = title
-        
+
         if i == st.session_state["active_chat_index"]:
-            st.sidebar.button(
-                f"{display_title}", 
-                key=f"chat_active_{i}", 
-                disabled=True,
-                use_container_width=True  # 确保按钮宽度一致
-            )
+            st.sidebar.button(f"{title}", key=f"chat_active_{i}", disabled=True)
         else:
-            if st.sidebar.button(
-                display_title, 
-                key=f"chat_{i}",
-                use_container_width=True  # 确保按钮宽度一致
-            ):
+            if st.sidebar.button(title, key=f"chat_{i}"):
                 st.session_state["active_chat_index"] = i
 
 # --- 清空所有历史 ---
