@@ -52,7 +52,7 @@ def get_azure_client(api_key):
     )
 
 
-# ========= Sidebar =========
+# ========= UI =========
 st.sidebar.title("Chat Sidebar")
 
 
@@ -74,7 +74,7 @@ if st.sidebar.button("🆕 New Chat", use_container_width=True):
     st.session_state["active_chat_index"] = len(st.session_state["conversations"]) - 1
 
 # ---- search configuration ----
-st.header("⚙️ Search Configuration")
+st.sidebar.subheader("Search Configuration")
 top_k = st.slider(
     "Number of documents to return", 
     min_value=1, 
@@ -109,9 +109,9 @@ else:
                 st.session_state["active_chat_index"] = i
 
 # ---- Usage tips ----
-st.markdown("---")
-st.header("Usage Tips")
-st.info("""
+st.sidebar.markdown("---")
+st.sidebar.subheader("Usage Tips")
+st.sidebar.info("""
 - Enter complete question statements
 - More specific questions yield more accurate results
 - Supports both Chinese and English queries
