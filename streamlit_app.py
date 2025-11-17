@@ -53,73 +53,73 @@ def get_azure_client(api_key):
 
 
     """渲染用户输入界面"""
-    st.sidebar.title("🧠 App Settings")
+st.sidebar.title("🧠 App Settings")
 
-    # --- Keys ---
-    openai_key = st.sidebar.text_input("Enter your HKUST Azure OpenAI Key:", type="password")
-    pinecone_key = st.sidebar.text_input("Enter your Pinecone API Key:", type="password")
-    if openai_key:
-        st.session_state["OPENAI_API_KEY"] = openai_key
-    if pinecone_key:
-        st.session_state["PINECONE_API_KEY"] = pinecone_key
+# --- Keys ---
+openai_key = st.sidebar.text_input("Enter your HKUST Azure OpenAI Key:", type="password")
+pinecone_key = st.sidebar.text_input("Enter your Pinecone API Key:", type="password")
+if openai_key:
+    st.session_state["OPENAI_API_KEY"] = openai_key
+if pinecone_key:
+    st.session_state["PINECONE_API_KEY"] = pinecone_key
 
-    st.sidebar.divider()
+st.sidebar.divider()
 
-    # --- New Chat / Clear All ---
-    if st.sidebar.button("🆕 New Chat", use_container_width=True):
-        st.session_state["conversations"].append([])
-        st.session_state["conversation_titles"].append("New Chat")
-        st.session_state["active_chat_index"] = len(st.session_state["conversations"]) - 1
-    if st.sidebar.button("🗑️ Clear All Chats", use_container_width=True):
-        st.session_state["conversations"].clear()
-        st.session_state["conversation_titles"].clear()
-        st.session_state["active_chat_index"] = None
-        st.rerun()
+# --- New Chat / Clear All ---
+if st.sidebar.button("🆕 New Chat", use_container_width=True):
+    st.session_state["conversations"].append([])
+    st.session_state["conversation_titles"].append("New Chat")
+    st.session_state["active_chat_index"] = len(st.session_state["conversations"]) - 1
+if st.sidebar.button("🗑️ Clear All Chats", use_container_width=True):
+    st.session_state["conversations"].clear()
+    st.session_state["conversation_titles"].clear()
+    st.session_state["active_chat_index"] = None
+    st.rerun()
 
-    st.sidebar.subheader("💬 Chat History")
-    if len(st.session_state["conversation_titles"]) == 0:
-        st.sidebar.info("No history yet. Create a new chat to start.")
-    else:
-        for i, title in enumerate(st.session_state["conversation_titles"]):
-            if i == st.session_state["active_chat_index"]:
-                st.sidebar.button(f"📍 {title}", key=f"chat_{i}", disabled=True, use_container_width=True)
-            else:
-                if st.sidebar.button(f"💬 {title}", key=f"chat_{i}", use_container_width=True):
-                    st.session_state["active_chat_index"] = i
+st.sidebar.subheader("💬 Chat History")
+if len(st.session_state["conversation_titles"]) == 0:
+    st.sidebar.info("No history yet. Create a new chat to start.")
+else:
+    for i, title in enumerate(st.session_state["conversation_titles"]):
+        if i == st.session_state["active_chat_index"]:
+            st.sidebar.button(f"📍 {title}", key=f"chat_{i}", disabled=True, use_container_width=True)
+        else:
+            if st.sidebar.button(f"💬 {title}", key=f"chat_{i}", use_container_width=True):
+                st.session_state["active_chat_index"] = i
 
-    st.sidebar.divider()
+st.sidebar.divider()
 
-    # ============================
-    # 🔌 API Status + Config Section
-    # ============================
-    st.sidebar.header("🔧 API Status")
-    col_a, col_b = st.sidebar.columns(2)
-    with col_a: st.success("✅ Pinecone: Connected")
-    with col_b: st.success("✅ Azure OpenAI: Connected")
+# ============================
+# 🔌 API Status + Config Section
+# ============================
+st.sidebar.header("🔧 API Status")
+col_a, col_b = st.sidebar.columns(2)
+with col_a: st.success("✅ Pinecone: Connected")
+with col_b: st.success("✅ Azure OpenAI: Connected")
 
-    st.sidebar.header("⚙️ Search Configuration")
-    top_k = st.sidebar.slider("Number of documents to return", 1, 10, 3)
+st.sidebar.header("⚙️ Search Configuration")
+top_k = st.sidebar.slider("Number of documents to return", 1, 10, 3)
 
-    st.sidebar.markdown("---")
-    st.sidebar.header("💡 Usage Tips")
-    st.sidebar.info("""
-    - Enter complete question statements  
-    - More specific questions yield more accurate results  
-    - Supports both Chinese and English queries  
-    - System generates answers based on relevant documents
-    """)
+st.sidebar.markdown("---")
+st.sidebar.header("💡 Usage Tips")
+st.sidebar.info("""
+- Enter complete question statements  
+- More specific questions yield more accurate results  
+- Supports both Chinese and English queries  
+- System generates answers based on relevant documents
+""")
 
-    # --- Test Connection按钮 ---
-    if st.sidebar.button("🔄 Test Connection", use_container_width=True):
-        with st.spinner("Testing API connection..."):
-            try:
-                client = get_azure_client(st.session_state["OPENAI_API_KEY"])
-                response = client.embeddings.create(input="Hello world", model="text-embedding-ada-002")
-                st.sidebar.success("✅ Azure OpenAI connection successful!")
-            except Exception as e:
-                st.sidebar.error(f"❌ Connection failed: {e}")
-    
-    return top_k
+# --- Test Connection按钮 ---
+if st.sidebar.button("🔄 Test Connection", use_container_width=True):
+    with st.spinner("Testing API connection..."):
+        try:
+            client = get_azure_client(st.session_state["OPENAI_API_KEY"])
+            response = client.embeddings.create(input="Hello world", model="text-embedding-ada-002")
+            st.sidebar.success("✅ Azure OpenAI connection successful!")
+        except Exception as e:
+            st.sidebar.error(f"❌ Connection failed: {e}")
+
+return top_k
 
 # ========= 主体部分 =========
 st.title("Semantic Search AI Chat for BA Users")
