@@ -73,7 +73,7 @@ else:
         
         if i == st.session_state["active_chat_index"]:
             st.sidebar.button(
-                f"📍 {display_title}", 
+                f"{display_title}", 
                 key=f"chat_active_{i}", 
                 disabled=True,
                 use_container_width=True  # 确保按钮宽度一致
