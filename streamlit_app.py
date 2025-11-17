@@ -26,18 +26,26 @@ st.markdown(
         left: 15px;
         z-index: 100;
     }
-
+    /* 调整侧边栏宽度并确保可以滚动 */
     section[data-testid="stSidebar"] {
-        width: 350px !important; /* 默认是294px，这里增加到350px */
+        width: 380px !important;  /* 增加宽度 */
+        min-width: 380px !important;
         height: 100vh;
         overflow: auto;
     }
     section[data-testid="stSidebar"] > div {
-        width: 350px !important;
+        width: 380px !important;
+        padding-top: 2rem;
+        height: 100%;
     }
     /* 确保侧边栏内容适应新宽度 */
     .stSidebar .stButton>button {
         width: 100%;
+    }
+    /* 调整主内容区域的边距以适应更宽的侧边栏 */
+    .main .block-container {
+        padding-left: 400px;
+        padding-right: 2rem;
     }
     </style>
     """,
