@@ -64,32 +64,12 @@ st.sidebar.subheader("History")
 if len(st.session_state["conversations"]) == 0:
     st.sidebar.info("No history yet. Click '➕ New Chat' to start.")
 else:
-    # 我们需要使用 st.columns 来放置两个按钮在同一行
     for i, title in enumerate(st.session_state["conversation_titles"]):
-        cols = st.sidebar.columns([4, 1])  # 左宽右窄布局
-
-        with cols[0]:
-            # 如果正在查看该历史，则禁用按钮
-            if i == st.session_state["active_chat_index"]:
-                st.button(f"{title}", key=f"chat_active_{i}", disabled=True)
-            else:
-                if st.button(title, key=f"chat_{i}"):
-                    st.session_state["active_chat_index"] = i
-
-        with cols[1]:
-            # 🗑️ 单独删除按钮
-            if st.button("🗑️", key=f"delete_{i}", help="Delete this chat"):
-                # 删除对应数据
-                del st.session_state["conversations"][i]
-                del st.session_state["conversation_titles"][i]
-
-                # 如果删掉的正好是当前激活的对话或后面的，需要重置 active_chat_index
-                if st.session_state["active_chat_index"] == i:
-                    st.session_state["active_chat_index"] = None
-                elif st.session_state["active_chat_index"] and st.session_state["active_chat_index"] > i:
-                    st.session_state["active_chat_index"] -= 1
-
-                st.rerun()  # 🔄 立即刷新界面，防止多余刷新问题
+        if i == st.session_state["active_chat_index"]:
+            st.sidebar.button(f"🟢 {title}", key=f"chat_active_{i}", disabled=True)
+        else:
+            if st.sidebar.button(title, key=f"chat_{i}"):
+                st.session_state["active_chat_index"] = i
 
 # --- 清空所有历史 ---
 if st.sidebar.button("Clear All History"):
