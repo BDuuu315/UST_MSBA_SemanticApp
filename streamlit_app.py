@@ -80,7 +80,7 @@ if st.sidebar.button("🔄 Test Connection", use_container_width=True):
             response = client.embeddings.create(input="Hello world", model="text-embedding-ada-002")
             st.sidebar.success("✅ Azure OpenAI connection successful!")
         except Exception as e:
-            st.sidebar.error(f"❌ Connection failed: {e}"
+            st.sidebar.error(f"❌ Connection failed: {e}")
 
 
 st.sidebar.header("⚙️ Search Configuration")
