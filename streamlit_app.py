@@ -87,32 +87,29 @@ else:
     )
     
     if user_query:
+        # 检查 API key
         if not st.session_state.get("OPENAI_API_KEY"):
-            st.error("Please add your OpenAI API key in the sidebar first.")
+            st.error("⚠️ Please add your OpenAI API key in the sidebar first.")
         else:
-            st.session_state["chat_history"].append({"query": user_query})
-    
-            with st.spinner("Processing..."):
-                # 模拟 Semantic 搜索结果 + 动态置信度
-                simulated_backend_output = {
-                    "status": "success",
-                    "semantic_answer": (
-                        "Our semantic engine retrieves and ranks documents "
-                        "based on meaning similarity using embeddings."
-                    ),
-                    "confidence": round(random.uniform(0.75, 0.99), 2),
+            with st.spinner("🔍 Processing your query..."):
+                # 模拟 Semantic 搜索结果
+                simulated_answer = (
+                    "Our semantic engine retrieves and ranks documents "
+                    "based on meaning similarity using embeddings."
+                )
+                confidence = round(random.uniform(0.75, 0.99), 2)
 
-                    st.chat_message("user").write(user_query)
-                    st.chat_message("assistant").write(simulated_answer)
-                    st.caption(f"Confidence Score: {confidence}")
+            # --- 显示并保存结果 ---
+            st.chat_message("user").write(user_query)
+            st.chat_message("assistant").write(simulated_answer)
+            st.caption(f"Confidence Score: {confidence}")
 
-                    # 保存进历史记录
-                    st.session_state["chat_history"].append({
-                        "query": user_query,
-                        "answer": simulated_answer,
-                        "confidence": confidence
-                    })
-                }
+            # 保存进历史记录
+            st.session_state["chat_history"].append({
+                "query": user_query,
+                "answer": simulated_answer,
+                "confidence": confidence
+            })
     
             if simulated_backend_output["status"] == "success":
                 st.chat_message("user").write(user_query)
