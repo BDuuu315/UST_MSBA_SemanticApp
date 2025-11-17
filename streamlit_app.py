@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 import json
+import random
 import os
 
 #First Page
@@ -56,6 +57,7 @@ if st.button("Search"):
         simulated_backend_output = {
             "status": "success",
             "semantic_answer": "Our Semantic search works by comparing the meaning of entered question with document embeddings.",
+            "confidence": round(random.uniform(0.75, 0.99), 2)
         }
 
         # ------------------------------
