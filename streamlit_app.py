@@ -50,6 +50,27 @@ def get_azure_client(api_key):
         azure_endpoint="https://hkust.azure-api.net"
     )
 
+# --- 输入新消息 ---
+user_query = st.text_input(
+    label="Enter your question:",
+    placeholder="e.g., Where is HKUST Business School?",
+    help="Type your natural language question here."
+)
+
+# ========= 初始化状态 =========
+if "conversations" not in st.session_state:
+    st.session_state["conversations"] = []
+if "conversation_titles" not in st.session_state:
+    st.session_state["conversation_titles"] = []
+if "active_chat_index" not in st.session_state:
+    st.session_state["active_chat_index"] = None
+if "OPENAI_API_KEY" not in st.session_state:
+    st.session_state["OPENAI_API_KEY"] = None
+if "documents" not in st.session_state:
+    st.session_state["documents"] = [
+        {"id": 1, "content": "HKUST Business School offers MBA programs with focus on analytics.", "embedding": None},
+        {"id": 2, "content": "The ISOM department provides courses in information systems.", "embedding": None},
+    ]
 # ========= Sidebar =========
 st.sidebar.title("Chat Sidebar")
 
@@ -115,8 +136,6 @@ for msg in current_chat:
     with st.chat_message(msg["role"]):
         st.write(msg["content"])
 
-# --- 输入新消息 ---
-user_query = st.chat_input("Type your question here...")
 
 if user_query:
     # 若没有 API key，不允许继续
