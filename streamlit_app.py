@@ -62,11 +62,11 @@ if st.sidebar.button("New Chat"):
 st.sidebar.subheader("History")
 
 if len(st.session_state["conversations"]) == 0:
-    st.sidebar.info("No history yet. Click '➕ New Chat' to start.")
+    st.sidebar.info("No history yet. Click 'New Chat' to start.")
 else:
     for i, title in enumerate(st.session_state["conversation_titles"]):
         if i == st.session_state["active_chat_index"]:
-            st.sidebar.button(f"🟢 {title}", key=f"chat_active_{i}", disabled=True)
+            st.sidebar.button(f"{title}", key=f"chat_active_{i}", disabled=True)
         else:
             if st.sidebar.button(title, key=f"chat_{i}"):
                 st.session_state["active_chat_index"] = i
@@ -79,8 +79,6 @@ if st.sidebar.button("Clear All History"):
     st.rerun()
     st.sidebar.success("Cleared all chat history successfully!")
 
-st.sidebar.markdown("---")
-st.sidebar.markdown("[Get an OpenAI API Key](https://platform.openai.com/account/api-keys)")
 
 # ========= 主体部分 =========
 st.title("Semantic Search AI Chat for BA Users")
