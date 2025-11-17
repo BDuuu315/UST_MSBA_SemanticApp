@@ -26,13 +26,11 @@ st.markdown(
         left: 15px;
         z-index: 100;
     }
-    /* 修复侧边栏滚动 */
-    section[data-testid="stSidebar"] {
-        height: 100vh;
-        overflow: auto;
-    }
+
     section[data-testid="stSidebar"] {
         width: 350px !important; /* 默认是294px，这里增加到350px */
+        height: 100vh;
+        overflow: auto;
     }
     section[data-testid="stSidebar"] > div {
         width: 350px !important;
