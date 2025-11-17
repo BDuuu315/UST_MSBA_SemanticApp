@@ -153,12 +153,9 @@ if user_query:
             
             # 生成回答
             simulated_answer = (
-                f"Your query has been processed with semantic search!\n\n"
-                f"**Query:** {user_query}\n"
+                f"Question has been processed with semantic search!\n\n"
+                f"**Question:** {user_query}\n\n"
                 f"**Embedding Dimension:** {vector_dim}\n"
-                f"**Vector Sample (first 5 values):** {query_vector[:5]}\n\n"
-                f"Our semantic engine has successfully generated embeddings and is ready "
-                f"to perform similarity searches across your documents."
             )
             confidence = round(random.uniform(0.75, 0.99), 2)
             answer_text = f"{simulated_answer}\n\n**Confidence Score:** {confidence}"
@@ -175,9 +172,9 @@ if user_query:
 with st.expander("🔍 Embedding Information"):
     st.markdown("""
     **How Semantic Search Works:**
-    - Your query is converted into a numerical vector (embedding)
-    - These embeddings capture semantic meaning
-    - Similarity is calculated between query and document embeddings
+    - Convert question into a numerical vector (embedding)
+    - Capture semantic meaning
+    - Calculate similarity between question and document embeddings
     - Most relevant documents are returned based on semantic similarity
     """)
     
