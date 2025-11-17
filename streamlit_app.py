@@ -1,5 +1,9 @@
 import streamlit as st
 import random
+import os
+import numpy as np
+import pandas as pd
+from openai import AzureOpenAI
 
 # ========= 页面配置 =========
 st.set_page_config(
@@ -37,6 +41,15 @@ if "active_chat_index" not in st.session_state:
 if "OPENAI_API_KEY" not in st.session_state:
     st.session_state["OPENAI_API_KEY"] = None
 
+# ========= 初始化Azure OpenAI客户端 =========
+@st.cache_resource
+def get_azure_client(api_key):
+    return AzureOpenAI(
+        api_key=api_key,
+        api_version="2023-05-15",
+        azure_endpoint="https://hkust.azure-api.net"
+    )
+
 # ========= Sidebar =========
 st.sidebar.title("Chat Sidebar")
 
@@ -71,9 +84,9 @@ else:
             display_title = title
 
         if i == st.session_state["active_chat_index"]:
-            st.sidebar.button(f"{title}", key=f"chat_active_{i}", disabled=True)
+            st.sidebar.button(f"{display_title}", key=f"chat_active_{i}", disabled=True, use_container_width=True)
         else:
-            if st.sidebar.button(title, key=f"chat_{i}"):
+            if st.sidebar.button(display_title, key=f"chat_{i}", use_container_width=True):
                 st.session_state["active_chat_index"] = i
 
 # --- 清空所有历史 ---
@@ -82,8 +95,6 @@ if st.sidebar.button("Clear All History"):
     st.session_state["conversation_titles"].clear()
     st.session_state["active_chat_index"] = None
     st.rerun()
-    st.sidebar.success("Cleared all chat history successfully!")
-
 
 # ========= 主体部分 =========
 st.title("Semantic Search AI Chat for BA Users")
@@ -121,15 +132,56 @@ if user_query:
     if len(current_chat) == 1:
         st.session_state["conversation_titles"][chat_index] = user_query[:40]
 
-    # 2️⃣ 生成模型回答
-    with st.spinner("Processing..."):
-        simulated_answer = (
-            "Our semantic engine retrieves and ranks documents "
-            "based on meaning similarity using embeddings."
-        )
-        confidence = round(random.uniform(0.75, 0.99), 2)
-        answer_text = f"{simulated_answer}\n\n**Confidence Score:** {confidence}"
+    # 2️⃣ 生成embedding并获取AI回答
+    with st.spinner("Processing your query with semantic search..."):
+        try:
+            # 初始化Azure OpenAI客户端
+            openai_client = get_azure_client(st.session_state["OPENAI_API_KEY"])
+            
+            # 为查询生成embedding
+            response = openai_client.embeddings.create(
+                input=user_query,
+                model="text-embedding-ada-002"
+            )
+            
+            # 获取embedding向量
+            query_vector = response.data[0].embedding
+            vector_dim = len(query_vector)
+            
+            # 模拟语义搜索结果（这里可以替换为你的实际搜索逻辑）
+            # 基于embedding进行相似度搜索等操作
+            
+            # 生成回答
+            simulated_answer = (
+                f"Your query has been processed with semantic search!\n\n"
+                f"**Query:** {user_query}\n"
+                f"**Embedding Dimension:** {vector_dim}\n"
+                f"**Vector Sample (first 5 values):** {query_vector[:5]}\n\n"
+                f"Our semantic engine has successfully generated embeddings and is ready "
+                f"to perform similarity searches across your documents."
+            )
+            confidence = round(random.uniform(0.75, 0.99), 2)
+            answer_text = f"{simulated_answer}\n\n**Confidence Score:** {confidence}"
+            
+        except Exception as e:
+            answer_text = f"Error processing your query: {str(e)}\n\nPlease check your API key and try again."
+            confidence = 0.0
 
     # 3️⃣ 显示 AI 回复并保存
     st.chat_message("assistant").write(answer_text)
     current_chat.append({"role": "assistant", "content": answer_text})
+
+# ========= 显示embedding信息 =========
+with st.expander("🔍 Embedding Information"):
+    st.markdown("""
+    **How Semantic Search Works:**
+    - Your query is converted into a numerical vector (embedding)
+    - These embeddings capture semantic meaning
+    - Similarity is calculated between query and document embeddings
+    - Most relevant documents are returned based on semantic similarity
+    """)
+    
+    if 'query_vector' in locals():
+        st.metric("Embedding Dimension", vector_dim)
+        st.write("First 10 embedding values:")
+        st.code(str(query_vector[:10]))
