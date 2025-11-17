@@ -4,8 +4,8 @@ import random
 # ========= 页面配置 =========
 st.set_page_config(
     page_title="Semantic Search AI Chat",
-    layout="wide",
-    initial_sidebar_state="expanded",
+    layout="centered",
+    initial_sidebar_state="wide",
 )
 
 # ========= Logo 样式 =========
@@ -29,12 +29,12 @@ st.markdown(
 st.image("Logo_USTBusinessSchool.svg", width=120, output_format="SVG")
 
 # ========= Sidebar 控制面板 =========
-st.sidebar.title("⚙️ Control Panel")
+st.sidebar.title("Sidebar")
 
 api_key = st.sidebar.text_input(
-    "🔑 Enter your OpenAI API Key",
+    "Enter your HKUST OpenAI API Key",
     type="password",
-    help="You can get one at https://platform.openai.com/account/api-keys"
+    help="You can check ISOM 6670G Syllabus to set up your HKUST OpenAI account and get your OpenAI API Key"
 )
 if api_key:
     st.session_state["OPENAI_API_KEY"] = api_key
@@ -46,7 +46,7 @@ if "active_chat_index" not in st.session_state:
     st.session_state["active_chat_index"] = None  # 当前查看的对话编号
 
 st.sidebar.markdown("---")
-st.sidebar.subheader("💬 Chat History")
+st.sidebar.subheader("Chat History")
 
 # ------- 历史会话展示 -------
 if len(st.session_state["chat_history"]) == 0:
@@ -54,11 +54,11 @@ if len(st.session_state["chat_history"]) == 0:
 else:
     for i, msg in enumerate(st.session_state["chat_history"]):
         # 在每条消息前增加编号按钮（点击查看，不触发重复查询）
-        if st.sidebar.button(f"🗨️ {i+1}. {msg['query'][:25]}"):
+        if st.sidebar.button(f"{i+1}. {msg['query'][:25]}"):
             st.session_state["active_chat_index"] = i
 
 # 清除聊天记录按钮
-if st.sidebar.button("🗑️ Clear History"):
+if st.sidebar.button("Clear History"):
     st.session_state["chat_history"] = []
     st.session_state["active_chat_index"] = None
     st.sidebar.success("Chat history cleared!")
@@ -73,7 +73,7 @@ st.caption("A Semantic Search App prototype for ISOM 6670G.")
 # 如果点击了历史记录按钮，显示内容
 if st.session_state["active_chat_index"] is not None:
     selected = st.session_state["chat_history"][st.session_state["active_chat_index"]]
-    st.info(f"🕘 Viewing conversation #{st.session_state['active_chat_index'] + 1}")
+    st.info(f"Viewing {st.session_state['active_chat_index'] + 1 History}")
     st.chat_message("user").write(selected["query"])
     st.chat_message("assistant").write(selected["answer"])
     st.caption(f"Confidence Score: {selected['confidence']}")
@@ -84,9 +84,9 @@ else:
     if user_query:
         # 检查 API key
         if not st.session_state.get("OPENAI_API_KEY"):
-            st.error("⚠️ Please add your OpenAI API key in the sidebar first.")
+            st.error("Please add your OpenAI API key in the sidebar first.")
         else:
-            with st.spinner("🔍 Processing your query..."):
+            with st.spinner("Processing..."):
                 # 模拟 Semantic 搜索结果
                 simulated_answer = (
                     "Our semantic engine retrieves and ranks documents "
