@@ -29,9 +29,11 @@ st.image("Logo_USTBusinessSchool.svg", width=120, output_format="SVG")
 
 # ========= 初始化状态 =========
 if "conversations" not in st.session_state:
-    st.session_state["conversations"] = []  # 会话列表，每个会话为 list[{"role":"user/assistant", "content":...}]
+    st.session_state["conversations"] = []  # 每个元素为 list[dict(role, content)]
+if "conversation_titles" not in st.session_state:
+    st.session_state["conversation_titles"] = []  # 保存会话标题
 if "active_chat_index" not in st.session_state:
-    st.session_state["active_chat_index"] = None  # 当前激活的会话索引
+    st.session_state["active_chat_index"] = None
 if "OPENAI_API_KEY" not in st.session_state:
     st.session_state["OPENAI_API_KEY"] = None
 
@@ -51,66 +53,78 @@ st.sidebar.markdown("---")
 
 # --- 新建会话按钮 ---
 if st.sidebar.button("➕ New Chat"):
-    st.session_state["conversations"].append([])  # 新增一个空会话
+    st.session_state["conversations"].append([])
+    st.session_state["conversation_titles"].append("New Chat")
     st.session_state["active_chat_index"] = len(st.session_state["conversations"]) - 1
 
-# --- 展示历史会话列表 ---
+# --- 历史列表 ---
 st.sidebar.subheader("History")
+
 if len(st.session_state["conversations"]) == 0:
     st.sidebar.info("No history yet. Click '➕ New Chat' to start.")
 else:
-    for i in range(len(st.session_state["conversations"])):
-        label = f"Chat {i+1}"
+    for i, title in enumerate(st.session_state["conversation_titles"]):
         if i == st.session_state["active_chat_index"]:
-            st.sidebar.button(label, key=f"chat_active_{i}", disabled=True)
+            st.sidebar.button(f"🟢 {title}", key=f"chat_active_{i}", disabled=True)
         else:
-            if st.sidebar.button(label, key=f"chat_{i}"):
+            if st.sidebar.button(title, key=f"chat_{i}"):
                 st.session_state["active_chat_index"] = i
 
-# --- 清空历史按钮 ---
+# --- 清空所有历史 ---
 if st.sidebar.button("🗑️ Clear All History"):
     st.session_state["conversations"].clear()
+    st.session_state["conversation_titles"].clear()
     st.session_state["active_chat_index"] = None
-    st.sidebar.success("All chat history cleared.")
+    st.sidebar.success("Cleared all chat history successfully!")
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("[Get your OpenAI API Key](https://platform.openai.com/account/api-keys)")
+st.sidebar.markdown("[Get an OpenAI API Key](https://platform.openai.com/account/api-keys)")
 
-# ========= 主区内容 =========
+# ========= 主体部分 =========
 st.title("Semantic Search AI Chat for BA Users")
 st.caption("A Semantic Search App prototype for ISOM 6670G.")
 
-# --- 当前会话内容 ---
+# --- 没有激活的聊天时提示 ---
 if st.session_state["active_chat_index"] is None:
     st.info("👋 Click *'➕ New Chat'* in the sidebar to start a conversation.")
-else:
-    current_chat = st.session_state["conversations"][st.session_state["active_chat_index"]]
+    st.stop()
 
-    # 显示历史消息
-    for msg in current_chat:
-        with st.chat_message(msg["role"]):
-            st.write(msg["content"])
+# --- 已选定的会话 ---
+chat_index = st.session_state["active_chat_index"]
+current_chat = st.session_state["conversations"][chat_index]
+chat_title = st.session_state["conversation_titles"][chat_index]
 
-    # --- 新输入 ---
-    user_query = st.chat_input("Type your question here...")
+# --- 展示已有消息 ---
+for msg in current_chat:
+    with st.chat_message(msg["role"]):
+        st.write(msg["content"])
 
-    if user_query:
-        if not st.session_state.get("OPENAI_API_KEY"):
-            st.error("Please add your OpenAI API key in the sidebar first.")
-        else:
-            # 1️⃣ 保存用户问题
-            current_chat.append({"role": "user", "content": user_query})
+# --- 输入新消息 ---
+user_query = st.chat_input("Type your question here...")
 
-            # 2️⃣ 模拟系统回答
-            with st.spinner("Processing..."):
-                simulated_answer = (
-                    "Our semantic engine retrieves and ranks documents "
-                    "based on meaning similarity using embeddings."
-                )
-                confidence = round(random.uniform(0.75, 0.99), 2)
-                answer_text = f"{simulated_answer}\n\n**Confidence Score:** {confidence}"
+if user_query:
+    # ✅ 若没有 API key，不允许继续
+    if not st.session_state.get("OPENAI_API_KEY"):
+        st.error("Please input your HKUST OpenAI API key in the sidebar first.")
+        st.stop()
 
-            # 3️⃣ 保存回答并显示
-            current_chat.append({"role": "assistant", "content": answer_text})
-            with st.chat_message("assistant"):
-                st.write(answer_text)
+    # 1️⃣ 立即显示并保存用户输入
+    st.chat_message("user").write(user_query)
+    current_chat.append({"role": "user", "content": user_query})
+
+    # 若这是该会话第一条消息，则用它更新标题
+    if len(current_chat) == 1:
+        st.session_state["conversation_titles"][chat_index] = user_query[:40]
+
+    # 2️⃣ 生成模型回答
+    with st.spinner("Processing..."):
+        simulated_answer = (
+            "Our semantic engine retrieves and ranks documents "
+            "based on meaning similarity using embeddings."
+        )
+        confidence = round(random.uniform(0.75, 0.99), 2)
+        answer_text = f"{simulated_answer}\n\n**Confidence Score:** {confidence}"
+
+    # 3️⃣ 显示 AI 回复并保存
+    st.chat_message("assistant").write(answer_text)
+    current_chat.append({"role": "assistant", "content": answer_text})
