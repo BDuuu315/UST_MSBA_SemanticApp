@@ -38,7 +38,7 @@ if "OPENAI_API_KEY" not in st.session_state:
     st.session_state["OPENAI_API_KEY"] = None
 
 # ========= Sidebar =========
-st.sidebar.title("💬 Chat Sidebar")
+st.sidebar.title("Chat Sidebar")
 
 # --- 输入 API Key ---
 api_key = st.sidebar.text_input(
@@ -65,13 +65,13 @@ if len(st.session_state["conversations"]) == 0:
 else:
     for i, title in enumerate(st.session_state["conversation_titles"]):
         if i == st.session_state["active_chat_index"]:
-            st.sidebar.button(f"🟢 {title}", key=f"chat_active_{i}", disabled=True)
+            st.sidebar.button(f"{title}", key=f"chat_active_{i}", disabled=True)
         else:
             if st.sidebar.button(title, key=f"chat_{i}"):
                 st.session_state["active_chat_index"] = i
 
 # --- 清空所有历史 ---
-if st.sidebar.button("🗑️ Clear All History"):
+if st.sidebar.button("Clear All History"):
     st.session_state["conversations"].clear()
     st.session_state["conversation_titles"].clear()
     st.session_state["active_chat_index"] = None
@@ -86,7 +86,7 @@ st.caption("A Semantic Search App prototype for ISOM 6670G.")
 
 # --- 没有激活的聊天时提示 ---
 if st.session_state["active_chat_index"] is None:
-    st.info("👋 Click *'➕ New Chat'* in the sidebar to start a conversation.")
+    st.info("Click *'New Chat'* in the sidebar to start a conversation.")
     st.stop()
 
 # --- 已选定的会话 ---
