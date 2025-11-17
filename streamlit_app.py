@@ -38,7 +38,7 @@ user_query = st.text_input(
 # Button for Search
 if st.button("Search"):
     if not user_query:
-        st.warning("⚠️ Please enter a question before submitting.")
+        st.warning("Please enter a question before submitting.")
     else:
         #
         payload = {"query": user_query}
@@ -55,7 +55,7 @@ if st.button("Search"):
         #
         simulated_backend_output = {
             "status": "success",
-            "semantic_answer": "Semantic search works by comparing the meaning of your query with document embeddings.",
+            "semantic_answer": "Our Semantic search works by comparing the meaning of entered question with document embeddings.",
             "confidence": 0.92
         }
 
