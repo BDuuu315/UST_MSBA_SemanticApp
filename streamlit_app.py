@@ -73,6 +73,15 @@ if st.sidebar.button("🆕 New Chat", use_container_width=True):
     st.session_state["conversation_titles"].append("New Chat")
     st.session_state["active_chat_index"] = len(st.session_state["conversations"]) - 1
 
+# ---- search configuration ----
+st.header("⚙️ Search Configuration")
+top_k = st.slider(
+    "Number of documents to return", 
+    min_value=1, 
+    max_value=10, 
+    value=3
+)
+
 # --- 清除所有历史按钮  ---
 if st.sidebar.button("🗑️ Clear All History", use_container_width=True):
     st.session_state["conversations"].clear()
@@ -98,6 +107,16 @@ else:
         else:
             if st.sidebar.button(f"💬 {display_title}", key=f"chat_{i}", use_container_width=True):
                 st.session_state["active_chat_index"] = i
+
+# ---- Usage tips ----
+st.markdown("---")
+st.header("Usage Tips")
+st.info("""
+- Enter complete question statements
+- More specific questions yield more accurate results
+- Supports both Chinese and English queries
+- System generates answers based on relevant documents
+""")
 
 # ========= 主体部分 =========
 st.title("Semantic Search AI Chat for BA Users")
