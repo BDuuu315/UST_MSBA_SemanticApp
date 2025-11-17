@@ -71,7 +71,7 @@ user_query = st.text_input(
 label="Enter your question:",
 placeholder="e.g., Where is HKUST Business School",
 help="Type your natural language question here."
-）
+)
 
 if user_query:
     if not st.session_state.get("OPENAI_API_KEY"):
