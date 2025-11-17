@@ -2,14 +2,14 @@ import streamlit as st
 import random
 import os
 
-# ========= 页面配置 =========
+#page set
 st.set_page_config(
     page_title="Semantic Search AI Chat",
     layout="centered",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
-# ========= Logo 样式 =========
+#Logo
 st.markdown(
     """
     <style>
@@ -28,41 +28,41 @@ st.markdown(
 )
 st.image("Logo_USTBusinessSchool.svg", width=120, output_format="SVG")
 
-# ========= Sidebar 部分 =========
+#Sidebar
 st.sidebar.title("Sidebar")
 
-# --- 输入 OpenAI API Key ---
+#OpenAI Key
 openai_api_key = st.sidebar.text_input(
     "Enter your UST OpenAI API Key",
     type="password",
     help="Check ISOM 6670G Syllabus to set up HKUST OpenAI account and get your OpenAI API Key"
 )
 
-# 在 session_state 中保存
+#session state save
 if openai_api_key:
     st.session_state["OPENAI_API_KEY"] = openai_api_key
 
-# --- 聊天历史记录 ---
+#history
 if "chat_history" not in st.session_state:
     st.session_state["chat_history"] = []
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("Chat History")
 
-# 如果有历史记录，则显示
+#show history
 if len(st.session_state["chat_history"]) == 0:
     st.sidebar.info("No chat history yet.")
 else:
     for i, msg in enumerate(st.session_state["chat_history"]):
         st.sidebar.button(f"{i+1}. {msg['query'][:20]}...")
 
-# --- 清除历史按钮 ---
+#clear history
 if st.sidebar.button("Clear History"):
     st.session_state["chat_history"] = []
     st.sidebar.success("Chat history cleared!")
 
 
-# ========= 主体部分 =========
+#main part
 st.title("Semantic Search AI Chat for BA Users")
 st.caption("A Semantic Search App prototype for ISOM 6670G.")
 
