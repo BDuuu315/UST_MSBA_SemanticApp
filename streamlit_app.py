@@ -32,7 +32,7 @@ st.image("Logo_USTBusinessSchool.svg", width=120, output_format="SVG")
 st.sidebar.title("Sidebar")
 
 #OpenAI Key
-openai_api_key = st.sidebar.text_input
+openai_api_key = st.sidebar.text_input(
     "Enter your UST OpenAI API Key",
     type="password",
     help="Check ISOM 6670G Syllabus to set up HKUST OpenAI account and get your OpenAI API Key"
