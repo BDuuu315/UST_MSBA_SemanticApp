@@ -26,6 +26,21 @@ st.markdown(
         left: 15px;
         z-index: 100;
     }
+    /* 修复侧边栏滚动 */
+    section[data-testid="stSidebar"] {
+        height: 100vh;
+        overflow: auto;
+    }
+    section[data-testid="stSidebar"] {
+        width: 350px !important; /* 默认是294px，这里增加到350px */
+    }
+    section[data-testid="stSidebar"] > div {
+        width: 350px !important;
+    }
+    /* 确保侧边栏内容适应新宽度 */
+    .stSidebar .stButton>button {
+        width: 100%;
+    }
     </style>
     """,
     unsafe_allow_html=True
