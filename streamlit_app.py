@@ -32,7 +32,7 @@ st.image("Logo_USTBusinessSchool.svg", width=120, output_format="SVG")
 st.sidebar.title("Sidebar")
 
 #OpenAI Key
-openai_api_key = st.sidebar.text_input(
+openai_api_key = st.sidebar.text_input
     "Enter your UST OpenAI API Key",
     type="password",
     help="Check ISOM 6670G Syllabus to set up HKUST OpenAI account and get your OpenAI API Key"
@@ -67,9 +67,10 @@ st.title("Semantic Search AI Chat for BA Users")
 st.caption("A Semantic Search App prototype for ISOM 6670G.")
 
 st.subheader("What is your question?")
-
-# --- 输入框 ---
-user_query = st.chat_input("Type your question here...")
+user_query = st.text_input(
+label="Enter your question:",
+placeholder="e.g., Where is HKUST Business School",
+help="Type your natural language question here."
 
 if user_query:
     if not st.session_state.get("OPENAI_API_KEY"):
@@ -93,7 +94,10 @@ if user_query:
             st.chat_message("assistant").write(simulated_backend_output["semantic_answer"])
             st.caption(f"**Confidence Score:** {simulated_backend_output['confidence']}")
         else:
-            st.error("Backend error. Please try again later.")
+            st.error("Backend error. Please try again later.")    
+)
+
+
 
 # ========= 页脚 =========
 #st.markdown("---")
