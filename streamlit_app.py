@@ -3,6 +3,7 @@ import numpy as np
 from openai import AzureOpenAI
 from pinecone import Pinecone
 from datetime import datetime
+from typing import Dict, Any
 
 # -------------------- 页面配置 --------------------
 st.set_page_config(page_title="Intelligent Semantic Search", layout="wide")
@@ -48,7 +49,7 @@ def init_session():
 
 init_session()
 
-# -------------------- Azure --------------------
+# -------------------- Azure 初始化 --------------------
 @st.cache_resource
 def get_azure_client(api_key):
     return AzureOpenAI(
@@ -57,20 +58,25 @@ def get_azure_client(api_key):
         azure_endpoint="https://hkust.azure-api.net"
     )
 
-# -------------------- Pinecone --------------------
+# -------------------- Pinecone 初始化 --------------------
 PINECONE_API_KEY = "pcsk_JPQMS_zQZ9MfrD4aSEe8b69PoxsjcsvoSPEHpzgYGt4GPm8bv7ED95Wjy4u7vPmxSnjj"
 PINECONE_INDEX_NAME = "msba-lab-1537"
 PINECONE_NAMESPACE = "default"
 
-pc = Pinecone(api_key=PINECONE_API_KEY)
-index = pc.Index(PINECONE_INDEX_NAME)
+@st.cache_resource
+def get_pinecone_client():
+    pc = Pinecone(api_key=PINECONE_API_KEY)
+    index = pc.Index(PINECONE_INDEX_NAME)
+    return index
 
-index.describe_index_stats()
-
+# -------------------- 相似度计算 --------------------
 def cosine_similarity(a: np.ndarray, b: np.ndarray) -> float:
     return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)))
 
-def semantic_search(user_query: str, top_k: int = 5):
+# -------------------- 语义检索 --------------------
+def semantic_search(user_query: str, openai_client, top_k: int = 10):
+    index = get_pinecone_client()
+
     emb_resp = openai_client.embeddings.create(
         input=user_query,
         model="text-embedding-ada-002"
@@ -85,75 +91,26 @@ def semantic_search(user_query: str, top_k: int = 5):
         include_values=False
     )
 
-    print(f"\nQuery: {user_query}\n")
-    print("-" * 60)
-    for i, match in enumerate(search_resp.matches, 1):
-        text = (
-            match.metadata.get("text") or
-            match.metadata.get("chunk_text") or
-            match.metadata.get("content") or
-            "[no text]"
-        )
-        print(f"[{i}] Score: {match.score:.4f} | {text[:120]}{'...' if len(text)>120 else ''}")
+    # 过滤相似度高于阈值 0.75 的结果
+    filtered_matches = [m for m in search_resp.matches if m.score >= 0.75]
 
-    return query_vector, search_resp
+    return query_vector, filtered_matches
 
+# -------------------- 构建增强提示 (RAG Prompt) --------------------
 def build_augmented_prompt(user_query: str, search_results) -> str:
     context_chunks = []
-    for i, match in enumerate(search_results.matches, 1):
+    for i, match in enumerate(search_results, 1):
         text = (
-            match.metadata.get("text") or
-            match.metadata.get("chunk_text") or
-            match.metadata.get("content") or
-            ""
+            match.metadata.get("text")
+            or match.metadata.get("chunk_text")
+            or match.metadata.get("content")
+            or ""
         )
         context_chunks.append(f"[Document {i}]\n{text.strip()}")
-
     context_block = "\n\n".join(context_chunks)
 
     augmented_prompt = f"""
-You are a knowledgeable assistant. Answer the user's question strictly using only the information from the Context below.
-
-Rules:
-- Use only facts present in the Context.
-- Do not add external knowledge or make anything up.
-- If the Context does not contain enough information, reply exactly:
-  "The provided context does not contain sufficient information to answer this question."
-
-User Question:
-{user_query}
-
-Context:
-{context_block}
-
-Answer:
-""".strip()
-
-    return augmented_prompt
-# ============================================
-# Part 4: Build augmented prompt (RAG)
-# ============================================
-
-def build_augmented_prompt(user_query: str, search_results) -> str:
-    """
-    Combine the user query with the retrieved documents from Pinecone
-    to form a retrieval-augmented prompt.
-    """
-    context_chunks = []
-
-    for i, match in enumerate(search_results.matches, start=1):
-        # 在 upsert 的时候你们应该把原文存到 metadata["text"] 或 metadata["chunk_text"]
-        doc_text = (
-            match.metadata.get("text")
-            or match.metadata.get("chunk_text", "")
-        )
-        context_chunks.append(f"[Document {i}]\n{doc_text}")
-
-    context_block = "\n\n".join(context_chunks)
-
-    augmented_prompt = f"""
-You are an intelligent assistant. Please answer the user's question
-strictly based on the context provided below.
+You are an intelligent assistant. Please answer the user's question strictly based on the context provided below.
 
 Guidelines:
 1. Only use the information from the **Context** section.
@@ -161,7 +118,7 @@ Guidelines:
 3. If the answer is not present in the context, reply with:
    "The provided context does not contain the answer."
 
-User Query:
+User Question:
 {user_query}
 
 Context:
@@ -170,21 +127,17 @@ Context:
 
     return augmented_prompt
 
-
-# 用 Part 3 + Part 4 串起来试一下
-aug_prompt = build_augmented_prompt(user_query, search_results)
-print("\n===== Augmented Prompt (preview) =====\n")
-print(aug_prompt[:800] + " ...")
-
+# -------------------- 调用 GPT 生成答案 --------------------
 def call_llm_generate_answer(
-        build_augmented_prompt: str,
-    model: str = "gpt",  
+    openai_client,
+    build_augmented_prompt: str,
+    model: str = "gpt",
     temperature: float = 0.2,
     max_tokens: int = 1024
-    ) -> Dict[str, Any]:
-   
+) -> Dict[str, Any]:
+    """调用 Azure OpenAI 获取最终回答"""
     try:
-        print(f"[{datetime.now().strftime('%H:%M:%S')}] Currently calling {model}...")
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] Calling {model}...")
 
         response = openai_client.chat.completions.create(
             model=model,
@@ -192,11 +145,11 @@ def call_llm_generate_answer(
                 {"role": "user", "content": build_augmented_prompt}
             ],
             temperature=temperature,
-            max_tokens= max_tokens,
+            max_tokens=max_tokens,
             top_p=0.8,
             presence_penalty=0.2,
             frequency_penalty=0.2
-    )
+        )
 
         answer = response.choices[0].message.content.strip()
         usage = response.usage
@@ -217,10 +170,10 @@ def call_llm_generate_answer(
     except Exception as e:
         error_msg = f"[ChatGPT Calling Failed] {str(e)}"
         print(error_msg)
-    return {
-        "answer": "An error occurred while generating the response",
-        "error": str(e),
-        "timestamp": datetime.now().isoformat()
+        return {
+            "answer": "An error occurred while generating the response.",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
         }
 
 # -------------------- Sidebar --------------------
@@ -253,8 +206,8 @@ else:
 # 页面一：首页
 # ===============================================================
 if st.session_state.page == "home":
-    st.markdown("<h1>🔍 Intelligent Semantic Search Application (Enhanced)</h1>", unsafe_allow_html=True)
-    st.caption("Using Pinecone + Azure OpenAI (RAG integrated)")
+    st.markdown("<h1>🔍 Intelligent Semantic Search Application (RAG Enhanced)</h1>", unsafe_allow_html=True)
+    st.caption("Using Pinecone + Azure OpenAI with full RAG pipeline")
 
     user_query = st.text_area(
         "📝 Enter your question",
@@ -296,13 +249,14 @@ if st.session_state.page == "home":
             st.error("No documents found with cosine similarity > 0.75 😔")
             st.stop()
 
-        with st.spinner("Building augmented prompt & generating intelligent answer..."):
+        with st.spinner("Building RAG prompt and generating intelligent answer..."):
             aug_prompt = build_augmented_prompt(user_query, matches)
-            answer = rag_answer_with_azure(aug_prompt, client)
+            rag_result = call_llm_generate_answer(client, aug_prompt)
 
         st.session_state.current_result = {
             "query": user_query,
-            "answer": answer,
+            "answer": rag_result["answer"],
+            "usage": rag_result.get("usage", {}),
             "vector_dim": len(q_vec),
             "vector_sample": q_vec[:10],
             "results": matches
@@ -318,10 +272,15 @@ if st.session_state.page == "result":
     st.markdown("### 💡 Intelligent Answer (RAG Based)")
     st.info(r["answer"])
 
+    if "usage" in r:
+        usage = r["usage"]
+        if usage:
+            st.markdown(f"**🧮 Token Usage:** Prompt: `{usage.get('prompt_tokens', 0)}`, Completion: `{usage.get('completion_tokens', 0)}`, Total: `{usage.get('total_tokens', 0)}`")
+
     st.markdown("---")
-    st.markdown(f"### 📄 Relevant Documents (Top {len(r['results'])} / score ≥ 0.75)")
+    st.markdown(f"### 📄 Relevant Documents (Top {len(r['results'])}, score ≥ 0.75)")
     for i, m in enumerate(r["results"], 1):
-        preview = (m.metadata.get("text") or m.metadata.get("chunk_text") or m.metadata.get("content") or "")[:150]
+        preview = (m.metadata.get("text") or m.metadata.get("chunk_text") or m.metadata.get("content") or "")[:180]
         st.markdown(f"**{i}.** (score: {m.score:.3f}) — {preview}...")
 
     st.markdown("---")
