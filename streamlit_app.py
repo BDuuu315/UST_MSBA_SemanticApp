@@ -7,7 +7,7 @@ from pinecone import Pinecone
 # -------------------- PAGE CONFIG --------------------
 st.set_page_config(page_title="Intelligent Semantic Search", layout="wide")
 
-# --------------- STYLE --------------------
+# -------------------- STYLES --------------------
 st.markdown("""
 <style>
 body, [data-testid="stAppViewContainer"] {
@@ -15,12 +15,9 @@ body, [data-testid="stAppViewContainer"] {
     color: #F5F5F5;
 }
 h1, h2, h3, h4, h5 { color: #FFFFFF; }
-.stTextInput>div>div>input {
-    background-color: #1E222A; 
-    color: white; 
-}
+.stTextInput>div>div>input,
 textarea {
-    background-color: #1E222A !important; 
+    background-color: #1E222A !important;
     color: white !important;
 }
 .stButton>button {
@@ -37,20 +34,23 @@ textarea {
 st.image("Logo_USTBusinessSchool.svg", width=120)
 
 
-# --------------- INITIAL SESSION STATE --------------------
-if "page" not in st.session_state:
-    st.session_state.page = "home"
-if "conversations" not in st.session_state:
-    st.session_state.conversations = []
-if "conversation_titles" not in st.session_state:
-    st.session_state.conversation_titles = []
-if "active_chat_index" not in st.session_state:
-    st.session_state.active_chat_index = None
-if "openai_api_key" not in st.session_state:
-    st.session_state.openai_api_key = None
+# -------------------- INIT SESSION --------------------
+def init_session():
+    defaults = {
+        "page": "home",
+        "conversations": [],
+        "conversation_titles": [],
+        "active_chat_index": None,
+        "openai_api_key": None
+    }
+    for k, v in defaults.items():
+        if k not in st.session_state:
+            st.session_state[k] = v
+
+init_session()
 
 
-# --------------- AZURE CLIENT --------------------
+# -------------------- AZURE OPENAI --------------------
 @st.cache_resource
 def get_azure_client(api_key):
     return AzureOpenAI(
@@ -59,7 +59,8 @@ def get_azure_client(api_key):
         azure_endpoint="https://hkust.azure-api.net"
     )
 
-# --------------- Pinecone Client --------------------
+
+# -------------------- PINECONE --------------------
 @st.cache_resource
 def get_pinecone_client():
     pc = Pinecone(api_key="pcsk_JPQMS_zQZ9MfrD4aSEe8b69PoxsjcsvoSPEHpzgYGt4GPm8bv7ED95Wjy4u7vPmxSnjj")
@@ -70,14 +71,13 @@ def get_pinecone_client():
     return index
 
 
-# --------------- SEMANTIC SEARCH FUNCTION --------------------
+# -------------------- SEMANTIC SEARCH --------------------
 def semantic_search(vector, top_k=5):
     index = get_pinecone_client()
-    results = index.query(vector=vector, top_k=top_k, include_metadata=True)
-    return results
+    return index.query(vector=vector, top_k=top_k, include_metadata=True)
 
 
-# --------------- SIDEBAR --------------------
+# -------------------- SIDEBAR --------------------
 st.sidebar.title("💬 Chat History")
 
 api_key = st.sidebar.text_input("Enter your HKUST API key", type="password")
@@ -99,12 +99,13 @@ else:
     for i, title in enumerate(st.session_state.conversation_titles):
         if st.sidebar.button(f"💬 {title}", key=f"hist_{i}", use_container_width=True):
             st.session_state.active_chat_index = i
+            st.session_state.current_result = st.session_state.conversations[i]
             st.session_state.page = "result"
             st.rerun()
 
 
 # ===============================================================
-# =============== PAGE 1: HOME / INPUT ==========================
+# PAGE 1: HOME
 # ===============================================================
 if st.session_state.page == "home":
 
@@ -112,18 +113,16 @@ if st.session_state.page == "home":
     st.caption("Using Pinecone + Azure OpenAI for semantic search")
 
     st.markdown("<h3>📝 Enter Your Question</h3>", unsafe_allow_html=True)
-    st.write("Please enter your question below:")
-
     user_query = st.text_area(
-        "e.g., What is HKUST?\nWhat is machine learning?",
+        "For example:\n• What is HKUST?\n• What is machine learning?",
         placeholder="Type your natural language question here...",
         height=120,
     )
 
-    col1, col2, col3 = st.columns([1.2, 0.4, 0.4])
+    col1, col2 = st.columns([1, 0.5])
     with col1:
         start_btn = st.button("🚀 Start Search", use_container_width=True)
-    with col3:
+    with col2:
         test_btn = st.button("🔄 Test Connection", use_container_width=True)
 
     if test_btn:
@@ -146,23 +145,23 @@ if st.session_state.page == "home":
             st.error("Please enter your API key in sidebar first.")
             st.stop()
 
-        # generate embedding
+        # Generate embedding
         with st.spinner("Generating embeddings..."):
             client = get_azure_client(st.session_state.openai_api_key)
             emb = client.embeddings.create(input=user_query, model="text-embedding-ada-002")
             query_vector = emb.data[0].embedding
             dim = len(query_vector)
 
-        # semantic search
-        with st.spinner("Running semantic search in Pinecone..."):
+        # Semantic search
+        with st.spinner("Running semantic search..."):
             try:
                 results = semantic_search(query_vector, top_k=5)
             except Exception as e:
                 st.error(f"Error querying Pinecone: {e}")
                 st.stop()
 
-        # fake response for now
-        answer = "This is an intelligent answer based on semantic search built from the most relevant context."
+        # Simulated answer
+        answer = "This is an intelligent answer generated using semantic search of relevant documents."
         st.session_state.current_result = {
             "query": user_query,
             "answer": answer,
@@ -175,7 +174,7 @@ if st.session_state.page == "home":
 
 
 # ===============================================================
-# =============== PAGE 2: RESULTS / STATISTICS ==================
+# PAGE 2: RESULTS
 # ===============================================================
 if st.session_state.page == "result":
     r = st.session_state.current_result
@@ -190,7 +189,7 @@ if st.session_state.page == "result":
     else:
         for i, m in enumerate(r["results"], 1):
             preview = m.metadata.get("text", "")[:150]
-            st.markdown(f"**{i}.** ({m.score:.3f}) — {preview}")
+            st.markdown(f"**{i}.** (score: {m.score:.3f}) — {preview}")
 
     st.markdown("---")
     st.markdown("### 📊 Search Statistics")
@@ -206,18 +205,9 @@ if st.session_state.page == "result":
     st.code(str(r["vector_sample"]))
 
     st.markdown("---")
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        if st.button("💾 Save Results", use_container_width=True):
-            title = r["query"][:40]
-            st.session_state.conversation_titles.append(title)
-            st.session_state.conversations.append(r)
-            st.success("✅ Saved to sidebar history.")
-    with c2:
-        if st.button("🔁 Search Again", use_container_width=True):
-            st.session_state.page = "result"  # stay here
-            st.rerun()
-    with c3:
-        if st.button("🏠 Return Home", use_container_width=True):
-            st.session_state.page = "home"
-            st.rerun()
+    # ======== Only Save History Button ==========
+    if st.button("💾 Save to History", use_container_width=True):
+        title = r["query"][:40]
+        st.session_state.conversation_titles.append(title)
+        st.session_state.conversations.append(r)
+        st.success("✅ Result saved to sidebar history.")
