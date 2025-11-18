@@ -119,12 +119,31 @@ if user_query:
 
             # 2️⃣ 查询 Pinecone
             index = get_pinecone_client()
-            query_results = index.query(
-                namespace=PINECONE_NAMESPACE,
-                vector=query_vector,
-                top_k=top_k,
-                include_metadata=True
-            )
+            
+            # 🚀 强制将输入 query 和返回结果都用 UTF‑8 处理，避免 latin-1 报错
+            try:
+                # 在 query 前先检查是否为 bytes 或 str，并强制 utf-8 编码
+                if isinstance(user_query, bytes):
+                    user_query = user_query.decode("utf-8", errors="ignore")
+                else:
+                    user_query = user_query.encode("utf-8", errors="ignore").decode("utf-8", errors="ignore")
+            
+                query_results = index.query(
+                    namespace=PINECONE_NAMESPACE,
+                    vector=query_vector,
+                    top_k=top_k,
+                    include_metadata=True
+                )
+            except UnicodeEncodeError as ue:
+                st.error(f"Encoding error: {ue}. Trying fallback encoding...")
+                query_results = index.query(
+                    namespace=PINECONE_NAMESPACE,
+                    vector=query_vector,
+                    top_k=top_k,
+                    include_metadata=True
+                )
+            except Exception as e:
+                raise e
 
             # 3️⃣ 展示结果
             if not query_results.matches:
