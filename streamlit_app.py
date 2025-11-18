@@ -224,7 +224,7 @@ else:
 # 🏠 页面一：主搜索界面
 # ===============================================================
 if st.session_state.page == "home":
-    st.title("Intelligent Semantic Search – RAG Enhanced")
+    st.title("Semantic Search for movie")
     st.caption("Using Pinecone + Azure OpenAI for Searching a film describtion")
 
     user_query = st.text_area("Enter your question", placeholder="e.g., Which film is about a imaginary friend")
