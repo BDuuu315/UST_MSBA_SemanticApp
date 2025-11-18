@@ -33,7 +33,7 @@ textarea {
 
 st.image("Logo_USTBusinessSchool.svg", width=120)
 
-# ===============================================================
+
 # define Initial Session:
 def init_session():
     defaults = {
@@ -49,7 +49,7 @@ def init_session():
 
 init_session()
 
-# Initializing Azure and Pinecone
+# Initializing Azure and Pinecone, version from File from Marcela
 @st.cache_resource
 def get_azure_client(api_key):
     return AzureOpenAI(
@@ -57,12 +57,12 @@ def get_azure_client(api_key):
         api_version="2023-05-15", 
         azure_endpoint="https://hkust.azure-api.net"
     )
-#version from File from Marcela
 
+# Pinecone API of Greta, self generated Database of movie describtions.
 PINECONE_API_KEY = "pcsk_JPQMS_zQZ9MfrD4aSEe8b69PoxsjcsvoSPEHpzgYGt4GPm8bv7ED95Wjy4u7vPmxSnjj"
 PINECONE_INDEX_NAME = "msba-lab-1537"
 PINECONE_NAMESPACE = "default"
-# Pinecone API of Greta, self generated Database of movie describtions.
+
 
 @st.cache_resource
 def get_pinecone_client():
@@ -71,9 +71,6 @@ def get_pinecone_client():
 
 # Semantic Search
 def semantic_search(user_query: str, openai_client, top_k: int = 10):
-    """
-    使用 Azure OpenAI embedding + Pinecone 向量检索，实现语义搜索
-    """
     index = get_pinecone_client()
 
     emb_resp = openai_client.embeddings.create(
@@ -90,18 +87,13 @@ def semantic_search(user_query: str, openai_client, top_k: int = 10):
         include_values=False
     )
 
-    # 筛选匹配度 > 0.75 的结果
+    # Match only when score >0.75
     filtered_matches = [m for m in search_resp.matches if m.score >= 0.75]
     return query_vector, filtered_matches
 
 
-# ===============================================================
-# 🏗️ 构建增强Prompt（RAG Prompt）
-# ===============================================================
+# RAG Prompt, in case can't find a correct answer from our Pinecone index, we allows our App to search direct from GPT
 def build_augmented_prompt(user_query: str, search_results) -> str:
-    """
-    将检索到的文档内容组合为上下文，生成模型输入提示词
-    """
     context_chunks = []
     for i, match in enumerate(search_results, 1):
         text = (
@@ -128,13 +120,10 @@ Context:
     return augmented_prompt
 
 
-# ===============================================================
-# 🤖 核心函数：结合RAG生成智能回答
-# ===============================================================
+# Generate Answer
 def generate_contextual_ai_response(user_query: str, openai_client, top_k: int = 10):
-    """ 执行：语义检索 → 构建Prompt → 调用Azure生成回答 """
     try:
-        # ① 语义检索
+        # Segmentation
         query_vec, matches = semantic_search(user_query, openai_client, top_k=top_k)
         if len(matches) == 0:
             return {
@@ -146,10 +135,10 @@ def generate_contextual_ai_response(user_query: str, openai_client, top_k: int =
                 "results": []
             }
 
-        # ② 构建增强Prompt
+        # Augment Prompt
         augmented_prompt = build_augmented_prompt(user_query, matches)
 
-        # ③ 调用Azure生成回答
+        # Azure AI for answer
         response = openai_client.chat.completions.create(
             model="gpt-35-turbo",
             messages=[
@@ -184,9 +173,7 @@ def generate_contextual_ai_response(user_query: str, openai_client, top_k: int =
         }
 
 
-# ===============================================================
-# Sidebar：会话与配置
-# ===============================================================
+# Sidebar
 st.sidebar.title("History & API Settings")
 
 api_key = st.sidebar.text_input("Enter your HKUST Azure OpenAI API Key", type="password")
@@ -212,14 +199,12 @@ else:
             st.session_state.current_result = st.session_state.conversations[i]
             st.rerun()
 
-# ===============================================================
-# 🏠 页面一：主搜索界面
-# ===============================================================
+# Main Area (Search Page)
 if st.session_state.page == "home":
-    st.title("Semantic Search for movie")
-    st.caption("Using Pinecone + Azure OpenAI for Searching a film describtion")
+    st.title("Semantic Search for movie ideas")
+    st.caption("Using this App for seeking inspiration for a screenplay")
 
-    user_query = st.text_area("Enter your question", placeholder="e.g., Which film is about a imaginary friend")
+    user_query = st.text_area("Enter your question", placeholder="e.g., Give me a scenario with a legendary travel")
     col1, col2 = st.columns([1, 0.5])
 
     with col1:
