@@ -128,7 +128,7 @@ Context:
 
 # -------------------- 用 Azure 生成答案 --------------------
 def call_llm_generate_answer(
-        build_augmented_prompt: str,
+        augmented_prompt: str,
     model: str = "gpt",  
     temperature: float = 0.2,
     max_tokens: int = 1024
