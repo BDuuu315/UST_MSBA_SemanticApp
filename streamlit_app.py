@@ -119,20 +119,17 @@ def build_augmented_prompt(user_query: str, search_results) -> str:
 
     context_block = "\n\n".join(context_chunks)
     augmented_prompt = f"""
-You are an intelligent assistant. Please answer the user's question strictly based on the context provided below.
+You are an intelligent assistant.
 
-Guidelines:
-1. Only use the information from the **Context** section.
-2. Do NOT fabricate or guess.
-3. If the answer is not in context, reply: "The provided context does not contain the answer."
+**Primary task:** Use the context below to answer as accurately as possible.
+**Fallback:** If the context is not relevant or lacks enough information, use your general knowledge to answer the question.
 
 User Question:
 {user_query}
 
 Context:
 {context_block}
-""".strip()
-
+"""
     return augmented_prompt
 
 
