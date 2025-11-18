@@ -166,13 +166,12 @@ def generate_contextual_ai_response(user_query: str, openai_client, top_k: int =
         return {
             "query": user_query,
             "answer": f"Error generating answer: {str(e)}",
-            "confidence": 0.0,
             "sources": [],
             "results": []
         }
 
 
-# Sidebar
+# Sidebar 
 st.sidebar.title("History & API Settings")
 
 api_key = st.sidebar.text_input("Enter your HKUST Azure OpenAI API Key", type="password")
@@ -203,7 +202,7 @@ if st.session_state.page == "home":
     st.title("Semantic Search for movie ideas")
     st.caption("Using this App for seeking inspiration for a screenplay")
 
-    user_query = st.text_area("Enter your question", placeholder="e.g., Give me a scenario with a legendary travel or A film of young kids and their imaginary friends")
+    user_query = st.text_area("Enter your question", placeholder="e.g., Give me a scenario with a legendary travel / A film of young kids and their imaginary friends")
     col1, col2 = st.columns([1, 0.5])
 
     with col1:
