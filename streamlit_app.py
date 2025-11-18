@@ -109,33 +109,50 @@ def semantic_search(user_query: str, openai_client, top_k=5):
 # ==============================================================
 # 🧩 BUILD RAG PROMPT
 # ==============================================================
-def build_augmented_prompt(user_query: str, search_results) -> str:
+def build_augmented_prompt(user_query: str, search_results, score_threshold: float = 0.75) -> str:
+    """
+    构建增强 Prompt，仅保留得分高于阈值的语料
+    """
+    # 过滤相似度较低的文档
+    filtered_matches = [m for m in search_results.matches if m.score >= score_threshold]
+
+    if not filtered_matches:
+        return f"""
+The provided context does not contain sufficient information to answer this question.
+No documents exceeded the similarity threshold of {score_threshold}.
+User Query:
+{user_query}
+""".strip()
+
+    # 拼接高匹配文档
     context_chunks = []
-    for i, match in enumerate(search_results.matches, 1):
-        doc_text = (
-            match.metadata.get("text")
-            or match.metadata.get("chunk_text", "")
-        )
-        context_chunks.append(f"[Document {i}]\n{doc_text.strip()}")
+    for i, match in enumerate(filtered_matches, 1):
+        text = (
+            match.metadata.get("text") or
+            match.metadata.get("chunk_text", "")
+        ).strip()
+        context_chunks.append(f"[Document {i}] (score: {match.score:.3f})\n{text}")
 
     context_block = "\n\n".join(context_chunks)
 
+    # 构造增强提示词
     augmented_prompt = f"""
-You are an intelligent assistant. Please answer the user's question
-strictly based on the context provided below.
+You are a knowledgeable assistant. Please answer the user's question
+based only on the high-confidence context below (score ≥ {score_threshold}).
 
 Guidelines:
-1. Only use the information from the **Context** section.
-2. Do NOT fabricate or guess.
-3. If the answer is not present in the context, reply with:
+1. Only use information from the context section.
+2. Do NOT invent or guess.
+3. If the answer cannot be found in these documents, say:
    "The provided context does not contain the answer."
 
-User Query:
+User Question:
 {user_query}
 
 Context:
 {context_block}
 """.strip()
+
     return augmented_prompt
 
 # ==============================================================
