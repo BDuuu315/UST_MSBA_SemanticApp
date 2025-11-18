@@ -6,9 +6,9 @@ from pinecone import Pinecone
 from openai import AzureOpenAI
 
 # ========== 配置区 ==========
-PINECONE_API_KEY = "pcsk_6jQ4eB_EhFPkDa8rZZLJtXo5Ry6n5yqQEFsSjpXgoudTbgAumZqyEyJzWX3T3g3X6ZXED1"
-PINECONE_INDEX_NAME = "sample-movies"
-PINECONE_HOST = "https://sample-movies-uch9hnu.svc.aped-4627-b74a.pinecone.io"
+PINECONE_API_KEY = "pcsk_6oHDXL_QyzEgtuEzHkTacffEiBW4gmGjPVfb4MAuz2Wy3M47yA5WR7XePPodEW1p6d6XyW"
+PINECONE_INDEX_NAME = "geo-semantic"
+PINECONE_HOST = "https://geo-semantic-u90uigv.svc.aped-4627-b74a.pinecone.io"
 PINECONE_NAMESPACE = "__default__"
 # =============================
 
