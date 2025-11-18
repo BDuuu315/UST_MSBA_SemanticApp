@@ -1,8 +1,8 @@
 import streamlit as st
-import random
 import numpy as np
 from openai import AzureOpenAI
 from pinecone import Pinecone
+from datetime import datetime
 
 # -------------------- 页面配置 --------------------
 st.set_page_config(page_title="Intelligent Semantic Search", layout="wide")
@@ -48,7 +48,7 @@ def init_session():
 
 init_session()
 
-# -------------------- 初始化 Azure --------------------
+# -------------------- Azure --------------------
 @st.cache_resource
 def get_azure_client(api_key):
     return AzureOpenAI(
@@ -57,20 +57,89 @@ def get_azure_client(api_key):
         azure_endpoint="https://hkust.azure-api.net"
     )
 
-# -------------------- 初始化 Pinecone --------------------
+# -------------------- Pinecone --------------------
+PINECONE_API_KEY = "pcsk_JPQMS_zQZ9MfrD4aSEe8b69PoxsjcsvoSPEHpzgYGt4GPm8bv7ED95Wjy4u7vPmxSnjj"
+PINECONE_INDEX_NAME = "msba-lab-1537"
+PINECONE_NAMESPACE = "default"
+
 @st.cache_resource
 def get_pinecone_client():
-    pc = Pinecone(api_key="pcsk_JPQMS_zQZ9MfrD4aSEe8b69PoxsjcsvoSPEHpzgYGt4GPm8bv7ED95Wjy4u7vPmxSnjj")
-    index = pc.Index(
-        name="developer-quickstart-py",
-        host="https://developer-quickstart-py-9d1pu2j.svc.aped-4627-b74a.pinecone.io"
-    )
+    pc = Pinecone(api_key=PINECONE_API_KEY)
+    index = pc.Index(PINECONE_INDEX_NAME)
     return index
 
-# -------------------- 语义搜索函数 --------------------
-def semantic_search(vector, top_k=5):
+# -------------------- 相似度计算 --------------------
+def cosine_similarity(a: np.ndarray, b: np.ndarray) -> float:
+    return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)))
+
+# -------------------- 语义检索 --------------------
+def semantic_search(user_query: str, openai_client, top_k: int = 10):
     index = get_pinecone_client()
-    return index.query(vector=vector, top_k=top_k, include_metadata=True)
+
+    emb_resp = openai_client.embeddings.create(
+        input=user_query,
+        model="text-embedding-ada-002"
+    )
+    query_vector = np.array(emb_resp.data[0].embedding)
+
+    search_resp = index.query(
+        namespace=PINECONE_NAMESPACE,
+        vector=query_vector.tolist(),
+        top_k=top_k,
+        include_metadata=True,
+        include_values=False
+    )
+
+    # 过滤相似度高于阈值 0.75 的结果
+    filtered_matches = [m for m in search_resp.matches if m.score >= 0.75]
+
+    return query_vector, filtered_matches
+
+# -------------------- 构建增强提示 (RAG prompt) --------------------
+def build_augmented_prompt(user_query: str, search_results) -> str:
+    context_chunks = []
+    for i, match in enumerate(search_results, 1):
+        text = (
+            match.metadata.get("text")
+            or match.metadata.get("chunk_text")
+            or match.metadata.get("content")
+            or ""
+        )
+        context_chunks.append(f"[Document {i}]\n{text.strip()}")
+    context_block = "\n\n".join(context_chunks)
+
+    augmented_prompt = f"""
+You are an intelligent assistant. Please answer the user's question strictly based on the context provided below.
+
+Guidelines:
+1. Only use the information from the **Context** section.
+2. Do NOT fabricate or guess.
+3. If the answer is not present in the context, reply with:
+   "The provided context does not contain the answer."
+
+User Question:
+{user_query}
+
+Context:
+{context_block}
+""".strip()
+
+    return augmented_prompt
+
+# -------------------- 用 Azure 生成答案 --------------------
+def rag_answer_with_azure(prompt: str, client, model="gpt", temperature=0.2, max_tokens=1536):
+    try:
+        response = client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=temperature,
+            max_tokens=max_tokens,
+            top_p=0.8
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        st.error(f"Azure RAG generation failed: {e}")
+        return "An error occurred while generating the response."
 
 # -------------------- Sidebar --------------------
 st.sidebar.title("💬 Chat History")
@@ -102,13 +171,12 @@ else:
 # 页面一：首页
 # ===============================================================
 if st.session_state.page == "home":
-    st.markdown("<h1>🔍 Intelligent Semantic Search Application</h1>", unsafe_allow_html=True)
-    st.caption("Using Pinecone + Azure OpenAI for semantic search")
+    st.markdown("<h1>🔍 Intelligent Semantic Search Application (Enhanced)</h1>", unsafe_allow_html=True)
+    st.caption("Using Pinecone + Azure OpenAI (RAG integrated)")
 
-    st.markdown("<h3>📝 Enter Your Question</h3>", unsafe_allow_html=True)
     user_query = st.text_area(
-        "For example:\n• What is HKUST?\n• What is machine learning?",
-        placeholder="Type your natural language question here...",
+        "📝 Enter your question",
+        placeholder="e.g., What is HKUST? What is machine learning?",
         height=120,
     )
 
@@ -135,32 +203,27 @@ if st.session_state.page == "home":
             st.warning("Please enter your question.")
             st.stop()
         if not st.session_state.openai_api_key:
-            st.error("Please enter your API key in sidebar first.")
+            st.error("Please enter your API key first.")
             st.stop()
 
-        # 生成 embedding
-        with st.spinner("Generating embeddings..."):
+        with st.spinner("Generating embeddings & performing semantic search..."):
             client = get_azure_client(st.session_state.openai_api_key)
-            emb = client.embeddings.create(input=user_query, model="text-embedding-ada-002")
-            query_vector = emb.data[0].embedding
-            dim = len(query_vector)
+            q_vec, matches = semantic_search(user_query, client, top_k=10)
 
-        # Pinecone 语义搜索
-        with st.spinner("Running semantic search..."):
-            try:
-                results = semantic_search(query_vector, top_k=5)
-            except Exception as e:
-                st.error(f"Error querying Pinecone: {e}")
-                st.stop()
+        if len(matches) == 0:
+            st.error("No documents found with cosine similarity > 0.75 😔")
+            st.stop()
 
-        # 模拟答案
-        answer = "This is an intelligent answer generated using semantic search based on relevant documents."
+        with st.spinner("Building augmented prompt & generating intelligent answer..."):
+            aug_prompt = build_augmented_prompt(user_query, matches)
+            answer = rag_answer_with_azure(aug_prompt, client)
+
         st.session_state.current_result = {
             "query": user_query,
             "answer": answer,
-            "vector_dim": dim,
-            "vector_sample": query_vector[:10],
-            "results": results.matches
+            "vector_dim": len(q_vec),
+            "vector_sample": q_vec[:10],
+            "results": matches
         }
         st.session_state.page = "result"
         st.rerun()
@@ -170,35 +233,21 @@ if st.session_state.page == "home":
 # ===============================================================
 if st.session_state.page == "result":
     r = st.session_state.current_result
-
-    st.markdown("### 💡 Intelligent Answer Based on Semantic Search")
+    st.markdown("### 💡 Intelligent Answer (RAG Based)")
     st.info(r["answer"])
 
     st.markdown("---")
-    st.markdown(f"### 📄 Relevant Documents ({len(r['results'])} found)")
-    if len(r["results"]) == 0:
-        st.write("No relevant documents found.")
-    else:
-        for i, m in enumerate(r["results"], 1):
-            preview = m.metadata.get("text", "")[:150]
-            st.markdown(f"**{i}.** (score: {m.score:.3f}) — {preview}")
+    st.markdown(f"### 📄 Relevant Documents (Top {len(r['results'])} / score ≥ 0.75)")
+    for i, m in enumerate(r["results"], 1):
+        preview = (m.metadata.get("text") or m.metadata.get("chunk_text") or m.metadata.get("content") or "")[:150]
+        st.markdown(f"**{i}.** (score: {m.score:.3f}) — {preview}...")
 
     st.markdown("---")
     st.markdown("### 📊 Search Statistics")
-    st.markdown("""
-    **How Semantic Search Works:**
-    - Convert question into a numerical vector (embedding)
-    - Capture semantic meaning
-    - Calculate similarity between question and document embeddings
-    - Most relevant documents are returned based on semantic similarity
-    """)
     st.metric("Embedding Dimension", r["vector_dim"])
     st.write("First 10 embedding values:")
     st.code(str(r["vector_sample"]))
 
-    st.markdown("---")
-
-    # ====== Save History 和 Search Again ======
     col1, col2 = st.columns(2)
     with col1:
         if st.button("💾 Save History", use_container_width=True):
@@ -206,7 +255,7 @@ if st.session_state.page == "result":
             if title not in st.session_state.conversation_titles:
                 st.session_state.conversation_titles.append(title)
                 st.session_state.conversations.append(r)
-            st.success("✅ Result saved to sidebar history.")
+            st.success("✅ Saved to sidebar history.")
 
     with col2:
         if st.button("🔁 Search Again", use_container_width=True):
