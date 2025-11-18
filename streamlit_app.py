@@ -137,37 +137,15 @@ else:
 st.title("Semantic Search AI Chat for BA Users")
 st.caption("A Semantic Search App prototype for ISOM 6670G.")
 
+# 确保总是有对话会话
 if len(st.session_state["conversations"]) == 0:
     st.session_state["conversations"].append([])
     st.session_state["conversation_titles"].append("New Chat")
     st.session_state["active_chat_index"] = 0
-    st.rerun()
 
-# --- 输入新消息 ---
-user_query = st.text_input(
-    label="Enter your question:",
-    placeholder="e.g., Where is HKUST Business School?",
-    help="Type your natural language question here."
-)
-
-# ========= 初始化状态 =========
-if "conversations" not in st.session_state:
-    st.session_state["conversations"] = []
-if "conversation_titles" not in st.session_state:
-    st.session_state["conversation_titles"] = []
-if "active_chat_index" not in st.session_state:
-    st.session_state["active_chat_index"] = None
-if "OPENAI_API_KEY" not in st.session_state:
-    st.session_state["OPENAI_API_KEY"] = None
-if "documents" not in st.session_state:
-    st.session_state["documents"] = [
-        {"id": 1, "content": "HKUST Business School offers MBA programs with focus on analytics.", "embedding": None},
-        {"id": 2, "content": "The ISOM department provides courses in information systems.", "embedding": None},
-    ]
-# --- 没有激活的聊天时提示 ---
+# 确保有激活的聊天
 if st.session_state["active_chat_index"] is None:
-    st.info("Click *'New Chat'* in the sidebar to start a conversation.")
-    st.stop()
+    st.session_state["active_chat_index"] = 0
 
 # --- 已选定的会话 ---
 chat_index = st.session_state["active_chat_index"]
@@ -179,6 +157,12 @@ for msg in current_chat:
     with st.chat_message(msg["role"]):
         st.write(msg["content"])
 
+# --- 输入新消息 ---
+user_query = st.text_input(
+    label="Enter your question:",
+    placeholder="e.g., Where is HKUST Business School?",
+    help="Type your natural language question here."
+)
 
 if user_query:
     # 若没有 API key，不允许继续
@@ -209,9 +193,6 @@ if user_query:
             # 获取embedding向量
             query_vector = response.data[0].embedding
             vector_dim = len(query_vector)
-            
-            # 模拟语义搜索结果（这里可以替换为你的实际搜索逻辑）
-            # 基于embedding进行相似度搜索等操作
             
             # 生成回答
             simulated_answer = (
