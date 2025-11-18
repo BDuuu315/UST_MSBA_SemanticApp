@@ -195,7 +195,7 @@ def generate_contextual_ai_response(user_query: str, openai_client, top_k: int =
 # ===============================================================
 # 🎛️ Sidebar：会话与配置
 # ===============================================================
-st.sidebar.title("💬 History & API Settings")
+st.sidebar.title("History & API Settings")
 
 api_key = st.sidebar.text_input("Enter your HKUST Azure OpenAI API Key", type="password")
 if api_key:
@@ -203,7 +203,7 @@ if api_key:
 
 st.sidebar.markdown("---")
 
-if st.sidebar.button("🧹 Clear All History", use_container_width=True):
+if st.sidebar.button("Clear All History", use_container_width=True):
     st.session_state["conversations"].clear()
     st.session_state["conversation_titles"].clear()
     st.session_state["active_chat_index"] = None
@@ -224,7 +224,7 @@ else:
 # 🏠 页面一：主搜索界面
 # ===============================================================
 if st.session_state.page == "home":
-    st.markdown("Intelligent Semantic Search – RAG Enhanced")
+    st.title("Intelligent Semantic Search – RAG Enhanced")
     st.caption("Using Pinecone + Azure OpenAI for Searching a film describtion")
 
     user_query = st.text_area("Enter your question", placeholder="e.g., Which film is about a imaginary friend")
