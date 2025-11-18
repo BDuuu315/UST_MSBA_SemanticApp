@@ -74,7 +74,6 @@ def get_azure_client(api_key):
 # ========= Sidebar =========
 st.sidebar.title("Chat Sidebar")
 
-
 # --- 输入 API Key ---
 api_key = st.sidebar.text_input(
     "Enter your HKUST OpenAI API Key",
@@ -86,8 +85,7 @@ if api_key:
 
 st.sidebar.markdown("---")
 
-#API check
-
+# API check
 if st.sidebar.button("🔄 Test Connection", use_container_width=True):
     with st.spinner("Testing API connection..."):
         try:
@@ -97,7 +95,6 @@ if st.sidebar.button("🔄 Test Connection", use_container_width=True):
         except Exception as e:
             st.sidebar.error(f"❌ Connection failed: {e}")
 
-
 st.sidebar.header("⚙️ Search Configuration")
 top_k = st.sidebar.slider("Number of documents to return", 1, 10, 3)
 
@@ -106,8 +103,9 @@ if st.sidebar.button("🆕 New Chat", use_container_width=True):
     st.session_state["conversations"].append([])
     st.session_state["conversation_titles"].append("New Chat")
     st.session_state["active_chat_index"] = len(st.session_state["conversations"]) - 1
+    st.rerun()
 
-# --- 清除所有历史按钮  ---
+# --- 清除所有历史按钮 ---
 if st.sidebar.button("🗑️ Clear All History", use_container_width=True):
     st.session_state["conversations"].clear()
     st.session_state["conversation_titles"].clear()
@@ -132,19 +130,17 @@ else:
         else:
             if st.sidebar.button(f"💬 {display_title}", key=f"chat_{i}", use_container_width=True):
                 st.session_state["active_chat_index"] = i
-
+                st.rerun()
 # ========= 主体部分 =========
 st.title("Semantic Search AI Chat for BA Users")
 st.caption("A Semantic Search App prototype for ISOM 6670G.")
 
-# 确保总是有对话会话
-if len(st.session_state["conversations"]) == 0:
-    st.session_state["conversations"].append([])
-    st.session_state["conversation_titles"].append("New Chat")
-    st.session_state["active_chat_index"] = 0
 
-# 确保有激活的聊天
 if st.session_state["active_chat_index"] is None:
+    # 如果没有激活的聊天，自动创建一个
+    if len(st.session_state["conversations"]) == 0:
+        st.session_state["conversations"].append([])
+        st.session_state["conversation_titles"].append("New Chat")
     st.session_state["active_chat_index"] = 0
 
 # --- 已选定的会话 ---
@@ -161,7 +157,8 @@ for msg in current_chat:
 user_query = st.text_input(
     label="Enter your question:",
     placeholder="e.g., Where is HKUST Business School?",
-    help="Type your natural language question here."
+    help="Type your natural language question here.",
+    key=f"input_{chat_index}"  # 为每个聊天使用不同的key，避免输入内容在切换时保留
 )
 
 if user_query:
