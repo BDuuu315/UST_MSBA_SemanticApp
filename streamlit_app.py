@@ -172,7 +172,7 @@ if user_query:
             answer_lines = [f"🔍 **Top {top_k} semantic matches (cosine similarity):**\n"]
             if results.matches:
                 for i, m in enumerate(results.matches, start=1):
-                    text = m.metadata.get("text", "")[:200]
+                    text = m.metadata.get("text", "")[:50]
                     score = m.score
                     answer_lines.append(f"{i}. *(score={score:.3f})* → {text}...")
             else:
