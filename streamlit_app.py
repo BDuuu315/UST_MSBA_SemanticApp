@@ -200,13 +200,13 @@ if user_query:
             # 初始化Azure OpenAI客户端
             openai_client = get_azure_client(st.session_state["OPENAI_API_KEY"])
             
-            # 为查询生成embedding
+            # 为查询生成embedding //Erin
             response = openai_client.embeddings.create(
                 input=user_query,
                 model="text-embedding-ada-002"
             )
             
-            # 获取embedding向量
+            # 获取embedding向量 //Erin
             query_vector = response.data[0].embedding
             vector_dim = len(query_vector)
             
