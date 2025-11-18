@@ -1,67 +1,56 @@
-
 import streamlit as st
 import random
-import os
 import numpy as np
-import pandas as pd
 from openai import AzureOpenAI
+from pinecone import Pinecone
 
-# ========= 页面配置 =========
-st.set_page_config(
-    page_title="Semantic Search AI Chat",
-    layout="centered",
-    initial_sidebar_state="expanded",
-)
+# -------------------- PAGE CONFIG --------------------
+st.set_page_config(page_title="Intelligent Semantic Search", layout="wide")
 
-# ========= Logo 样式 =========
-st.markdown(
-    """
-    <style>
-    [data-testid="stAppViewContainer"] {
-        position: relative;
-    }
-    .logo { 
-        position: fixed;
-        top: 10px;
-        left: 15px;
-        z-index: 100;
-    }
+# --------------- STYLE --------------------
+st.markdown("""
+<style>
+body, [data-testid="stAppViewContainer"] {
+    background-color: #0E1117;
+    color: #F5F5F5;
+}
+h1, h2, h3, h4, h5 { color: #FFFFFF; }
+.stTextInput>div>div>input {
+    background-color: #1E222A; 
+    color: white; 
+}
+textarea {
+    background-color: #1E222A !important; 
+    color: white !important;
+}
+.stButton>button {
+    border-radius: 8px;
+    font-weight: 600;
+}
+.stButton>button[kind=primary] {
+    background-color: #E74C3C;
+    color: white;
+}
+</style>
+""", unsafe_allow_html=True)
 
-    section[data-testid="stSidebar"] {
-        width: 380px !important;
-        min-width: 380px !important;
-        height: 100vh;
-        overflow: auto;
-    }
-    section[data-testid="stSidebar"] > div {
-        width: 380px !important;
-        padding-top: 2rem;
-        height: 100%;
-    }
-    .stSidebar .stButton>button {
-        width: 100%;
-    }
-    .main .block-container {
-        padding-left: 400px;
-        padding-right: 2rem;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-st.image("Logo_USTBusinessSchool.svg", width=120, output_format="SVG")
+st.image("Logo_USTBusinessSchool.svg", width=120)
 
-# ========= 初始化状态 =========
+
+# --------------- INITIAL SESSION STATE --------------------
+if "page" not in st.session_state:
+    st.session_state.page = "home"
 if "conversations" not in st.session_state:
-    st.session_state["conversations"] = []  # 每个元素为 list[dict(role, content)]
+    st.session_state.conversations = []
 if "conversation_titles" not in st.session_state:
-    st.session_state["conversation_titles"] = []  # 保存会话标题
+    st.session_state.conversation_titles = []
 if "active_chat_index" not in st.session_state:
-    st.session_state["active_chat_index"] = None
-if "OPENAI_API_KEY" not in st.session_state:
-    st.session_state["OPENAI_API_KEY"] = None
+    st.session_state.active_chat_index = None
+if "openai_api_key" not in st.session_state:
+    st.session_state.openai_api_key = None
 
-# ========= 初始化Azure OpenAI客户端 =========
+
+# --------------- AZURE CLIENT --------------------
 @st.cache_resource
 def get_azure_client(api_key):
     return AzureOpenAI(
@@ -70,168 +59,141 @@ def get_azure_client(api_key):
         azure_endpoint="https://hkust.azure-api.net"
     )
 
+# --------------- Pinecone Client --------------------
+@st.cache_resource
+def get_pinecone_client():
+    pc = Pinecone(api_key="pcsk_JPQMS_zQZ9MfrD4aSEe8b69PoxsjcsvoSPEHpzgYGt4GPm8bv7ED95Wjy4u7vPmxSnjj")
+    index = pc.Index(
+        name="developer-quickstart-py",
+        host="https://developer-quickstart-py-9d1pu2j.svc.aped-4627-b74a.pinecone.io"
+    )
+    return index
 
-# ========= Sidebar =========
-st.sidebar.title("Chat Sidebar")
+
+# --------------- SEMANTIC SEARCH FUNCTION --------------------
+def semantic_search(vector, top_k=5):
+    index = get_pinecone_client()
+    results = index.query(vector=vector, top_k=top_k, include_metadata=True)
+    return results
 
 
-# --- 输入 API Key ---
-api_key = st.sidebar.text_input(
-    "Enter your HKUST OpenAI API Key",
-    type="password",
-    help="You can check ISOM 6670G syllabus to get set-up instructions."
-)
+# --------------- SIDEBAR --------------------
+st.sidebar.title("💬 Chat History")
+
+api_key = st.sidebar.text_input("Enter your HKUST API key", type="password")
 if api_key:
-    st.session_state["OPENAI_API_KEY"] = api_key
+    st.session_state.openai_api_key = api_key
 
 st.sidebar.markdown("---")
 
-#API check
-
-if st.sidebar.button("🔄 Test Connection", use_container_width=True):
-    with st.spinner("Testing API connection..."):
-        try:
-            client = get_azure_client(st.session_state["OPENAI_API_KEY"])
-            response = client.embeddings.create(input="Hello world", model="text-embedding-ada-002")
-            st.sidebar.success("✅ Azure OpenAI connection successful!")
-        except Exception as e:
-            st.sidebar.error(f"❌ Connection failed: {e}")
-
-
-st.sidebar.header("⚙️ Search Configuration")
-top_k = st.sidebar.slider("Number of documents to return", 1, 10, 3)
-
-# --- 新建会话按钮 ---
-if st.sidebar.button("🆕 New Chat", use_container_width=True):
-    st.session_state["conversations"].append([])
-    st.session_state["conversation_titles"].append("New Chat")
-    st.session_state["active_chat_index"] = len(st.session_state["conversations"]) - 1
-
-# --- 清除所有历史按钮  ---
-if st.sidebar.button("🗑️ Clear All History", use_container_width=True):
-    st.session_state["conversations"].clear()
-    st.session_state["conversation_titles"].clear()
-    st.session_state["active_chat_index"] = None
+if st.sidebar.button("🧹 Clear All History", use_container_width=True):
+    st.session_state.conversations.clear()
+    st.session_state.conversation_titles.clear()
+    st.session_state.active_chat_index = None
+    st.session_state.page = "home"
     st.rerun()
 
-# --- 历史列表 ---
-st.sidebar.subheader("History")
-
-if len(st.session_state["conversations"]) == 0:
-    st.sidebar.info("No history yet. Click 'New Chat' to start.")
+if len(st.session_state.conversations) == 0:
+    st.sidebar.info("No saved results yet.")
 else:
-    for i, title in enumerate(st.session_state["conversation_titles"]):
-        max_length = 20
-        if len(title) > max_length:
-            display_title = title[:max_length] + "..."
+    for i, title in enumerate(st.session_state.conversation_titles):
+        if st.sidebar.button(f"💬 {title}", key=f"hist_{i}", use_container_width=True):
+            st.session_state.active_chat_index = i
+            st.session_state.page = "result"
+            st.rerun()
+
+
+# ===============================================================
+# =============== PAGE 1: HOME / INPUT ==========================
+# ===============================================================
+if st.session_state.page == "home":
+
+    st.markdown("<h1>🔍 Intelligent Semantic Search Application</h1>", unsafe_allow_html=True)
+    st.caption("Using Pinecone + Azure OpenAI for semantic search")
+
+    st.markdown("<h3>📝 Enter Your Question</h3>", unsafe_allow_html=True)
+    st.write("Please enter your question below:")
+
+    user_query = st.text_area(
+        "e.g., What is HKUST?\nWhat is machine learning?",
+        placeholder="Type your natural language question here...",
+        height=120,
+    )
+
+    col1, col2, col3 = st.columns([1.2, 0.4, 0.4])
+    with col1:
+        start_btn = st.button("🚀 Start Search", use_container_width=True)
+    with col3:
+        test_btn = st.button("🔄 Test Connection", use_container_width=True)
+
+    if test_btn:
+        if not st.session_state.openai_api_key:
+            st.error("Please input your Azure API key first.")
         else:
-            display_title = title
+            with st.spinner("Testing Azure OpenAI..."):
+                try:
+                    client = get_azure_client(st.session_state.openai_api_key)
+                    client.embeddings.create(input="Hello world", model="text-embedding-ada-002")
+                    st.success("✅ Connection successful.")
+                except Exception as e:
+                    st.error(f"❌ Failed: {e}")
 
-        if i == st.session_state["active_chat_index"]:
-            st.sidebar.button(f"📍 {display_title}", key=f"chat_active_{i}", disabled=True, use_container_width=True)
-        else:
-            if st.sidebar.button(f"💬 {display_title}", key=f"chat_{i}", use_container_width=True):
-                st.session_state["active_chat_index"] = i
+    if start_btn:
+        if not user_query.strip():
+            st.warning("Please enter your question.")
+            st.stop()
+        if not st.session_state.openai_api_key:
+            st.error("Please enter your API key in sidebar first.")
+            st.stop()
 
-# ========= 主体部分 =========
-st.title("Semantic Search AI Chat for BA Users")
-st.caption("A Semantic Search App prototype for ISOM 6670G.")
+        # generate embedding
+        with st.spinner("Generating embeddings..."):
+            client = get_azure_client(st.session_state.openai_api_key)
+            emb = client.embeddings.create(input=user_query, model="text-embedding-ada-002")
+            query_vector = emb.data[0].embedding
+            dim = len(query_vector)
 
-if len(st.session_state["conversations"]) == 0:
-    st.session_state["conversations"].append([])
-    st.session_state["conversation_titles"].append("New Chat")
-    st.session_state["active_chat_index"] = 0
-    st.rerun()
+        # semantic search
+        with st.spinner("Running semantic search in Pinecone..."):
+            try:
+                results = semantic_search(query_vector, top_k=5)
+            except Exception as e:
+                st.error(f"Error querying Pinecone: {e}")
+                st.stop()
 
-# --- 输入新消息 ---
-user_query = st.text_input(
-    label="Enter your question:",
-    placeholder="e.g., Where is HKUST Business School?",
-    help="Type your natural language question here."
-)
-
-# ========= 初始化状态 =========
-if "conversations" not in st.session_state:
-    st.session_state["conversations"] = []
-if "conversation_titles" not in st.session_state:
-    st.session_state["conversation_titles"] = []
-if "active_chat_index" not in st.session_state:
-    st.session_state["active_chat_index"] = None
-if "OPENAI_API_KEY" not in st.session_state:
-    st.session_state["OPENAI_API_KEY"] = None
-if "documents" not in st.session_state:
-    st.session_state["documents"] = [
-        {"id": 1, "content": "HKUST Business School offers MBA programs with focus on analytics.", "embedding": None},
-        {"id": 2, "content": "The ISOM department provides courses in information systems.", "embedding": None},
-    ]
-# --- 没有激活的聊天时提示 ---
-if st.session_state["active_chat_index"] is None:
-    st.info("Click *'New Chat'* in the sidebar to start a conversation.")
-    st.stop()
-
-# --- 已选定的会话 ---
-chat_index = st.session_state["active_chat_index"]
-current_chat = st.session_state["conversations"][chat_index]
-chat_title = st.session_state["conversation_titles"][chat_index]
-
-# --- 展示已有消息 ---
-for msg in current_chat:
-    with st.chat_message(msg["role"]):
-        st.write(msg["content"])
+        # fake response for now
+        answer = "This is an intelligent answer based on semantic search built from the most relevant context."
+        st.session_state.current_result = {
+            "query": user_query,
+            "answer": answer,
+            "vector_dim": dim,
+            "vector_sample": query_vector[:10],
+            "results": results.matches
+        }
+        st.session_state.page = "result"
+        st.rerun()
 
 
-if user_query:
-    # 若没有 API key，不允许继续
-    if not st.session_state.get("OPENAI_API_KEY"):
-        st.error("Please input your HKUST OpenAI API key in the sidebar first.")
-        st.stop()
+# ===============================================================
+# =============== PAGE 2: RESULTS / STATISTICS ==================
+# ===============================================================
+if st.session_state.page == "result":
+    r = st.session_state.current_result
 
-    # 1️⃣ 立即显示并保存用户输入
-    st.chat_message("user").write(user_query)
-    current_chat.append({"role": "user", "content": user_query})
+    st.markdown("### 💡 Intelligent Answer Based on Semantic Search")
+    st.info(r["answer"])
 
-    # 若这是该会话第一条消息，则用它更新标题
-    if len(current_chat) == 1:
-        st.session_state["conversation_titles"][chat_index] = user_query[:40]
+    st.markdown("---")
+    st.markdown(f"### 📄 Relevant Documents ({len(r['results'])} found)")
+    if len(r["results"]) == 0:
+        st.write("No relevant documents found.")
+    else:
+        for i, m in enumerate(r["results"], 1):
+            preview = m.metadata.get("text", "")[:150]
+            st.markdown(f"**{i}.** ({m.score:.3f}) — {preview}")
 
-    # 2️⃣ 生成embedding并获取AI回答
-    with st.spinner("Processing your query with semantic search..."):
-        try:
-            # 初始化Azure OpenAI客户端
-            openai_client = get_azure_client(st.session_state["OPENAI_API_KEY"])
-            
-            # 为查询生成embedding //Erin
-            response = openai_client.embeddings.create(
-                input=user_query,
-                model="text-embedding-ada-002"
-            )
-            
-            # 获取embedding向量 //Erin
-            query_vector = response.data[0].embedding
-            vector_dim = len(query_vector)
-            
-            # 模拟语义搜索结果（这里可以替换为你的实际搜索逻辑）
-            # 基于embedding进行相似度搜索等操作
-            
-            # 生成回答
-            simulated_answer = (
-                f"Question has been processed with semantic search!\n\n"
-                f"**Question:** {user_query}\n\n"
-                f"**Embedding Dimension:** {vector_dim}\n"
-            )
-            confidence = round(random.uniform(0.75, 0.99), 2)
-            answer_text = f"{simulated_answer}\n\n**Confidence Score:** {confidence}"
-            
-        except Exception as e:
-            answer_text = f"Error processing your query: {str(e)}\n\nPlease check your API key and try again."
-            confidence = 0.0
-
-    # 3️⃣ 显示 AI 回复并保存
-    st.chat_message("assistant").write(answer_text)
-    current_chat.append({"role": "assistant", "content": answer_text})
-
-# ========= 显示embedding信息 =========
-with st.expander("🔍 Embedding Information"):
+    st.markdown("---")
+    st.markdown("### 📊 Search Statistics")
     st.markdown("""
     **How Semantic Search Works:**
     - Convert question into a numerical vector (embedding)
@@ -239,8 +201,23 @@ with st.expander("🔍 Embedding Information"):
     - Calculate similarity between question and document embeddings
     - Most relevant documents are returned based on semantic similarity
     """)
-    
-    if 'query_vector' in locals():
-        st.metric("Embedding Dimension", vector_dim)
-        st.write("First 10 embedding values:")
-        st.code(str(query_vector[:10]))
+    st.metric("Embedding Dimension", r["vector_dim"])
+    st.write("First 10 embedding values:")
+    st.code(str(r["vector_sample"]))
+
+    st.markdown("---")
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        if st.button("💾 Save Results", use_container_width=True):
+            title = r["query"][:40]
+            st.session_state.conversation_titles.append(title)
+            st.session_state.conversations.append(r)
+            st.success("✅ Saved to sidebar history.")
+    with c2:
+        if st.button("🔁 Search Again", use_container_width=True):
+            st.session_state.page = "result"  # stay here
+            st.rerun()
+    with c3:
+        if st.button("🏠 Return Home", use_container_width=True):
+            st.session_state.page = "home"
+            st.rerun()
