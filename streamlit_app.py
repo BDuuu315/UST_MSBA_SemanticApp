@@ -1,13 +1,17 @@
 import streamlit as st
-import random
 import numpy as np
 from openai import AzureOpenAI
 from pinecone import Pinecone
+from datetime import datetime
 
-# -------------------- PAGE CONFIG --------------------
+# ==============================================================
+# 🧭 PAGE CONFIG
+# ==============================================================
 st.set_page_config(page_title="Intelligent Semantic Search", layout="wide")
 
-# -------------------- STYLES --------------------
+# ==============================================================
+# 🎨 STYLES
+# ==============================================================
 st.markdown("""
 <style>
 body, [data-testid="stAppViewContainer"] {
@@ -33,8 +37,9 @@ textarea {
 
 st.image("Logo_USTBusinessSchool.svg", width=120)
 
-
-# -------------------- INIT SESSION --------------------
+# ==============================================================
+# 💾 SESSION INIT
+# ==============================================================
 def init_session():
     defaults = {
         "page": "home",
@@ -49,8 +54,9 @@ def init_session():
 
 init_session()
 
-
-# -------------------- AZURE OPENAI --------------------
+# ==============================================================
+# 🤖 AZURE OPENAI CLIENT
+# ==============================================================
 @st.cache_resource
 def get_azure_client(api_key):
     return AzureOpenAI(
@@ -59,12 +65,12 @@ def get_azure_client(api_key):
         azure_endpoint="https://hkust.azure-api.net"
     )
 
-
-# -------------------- PINECONE --------------------
+# ==============================================================
+# 🧱 PINECONE CLIENT + SEMANTIC SEARCH (替换后的版本)
+# ==============================================================
 @st.cache_resource
-def get_pinecone_client() -> Pinecone.Index:
+def get_pinecone_client():
     pc = Pinecone(api_key="pcsk_JPQMS_zQZ9MfrD4aSEe8b69PoxsjcsvoSPEHpzgYGt4GPm8bv7ED95Wjy4u7vPmxSnjj")
-    # 根据 Streamlit 代码配置的 Index 名称与 Host
     index = pc.Index(
         name="developer-quickstart-py",
         host="https://developer-quickstart-py-9d1pu2j.svc.aped-4627-b74a.pinecone.io"
@@ -72,19 +78,18 @@ def get_pinecone_client() -> Pinecone.Index:
     return index
 
 
-# 语义检索函数
-def semantic_search(user_query: str, openai_client, top_k: int = 5):
+def semantic_search(user_query: str, openai_client, top_k=5):
     """
-    给定自然语言查询 -> Azure OpenAI 生成向量 -> Pinecone 搜索最相似的文档
+    使用 Azure 生成嵌入向量，并在 Pinecone 上实现语义检索
     """
-    # 生成 query embedding
+    # === 生成 query 向量 ===
     emb = openai_client.embeddings.create(
         input=user_query,
         model="text-embedding-ada-002"
     )
     query_vector = emb.data[0].embedding
 
-    # 检索 Pinecone
+    # === 检索 Pinecone ===
     index = get_pinecone_client()
     search_resp = index.query(
         vector=query_vector,
@@ -92,17 +97,63 @@ def semantic_search(user_query: str, openai_client, top_k: int = 5):
         include_metadata=True
     )
 
-    # 输出调试信息
-    print(f"\nQuery: {user_query}\n")
-    print("-" * 60)
-    for i, match in enumerate(search_resp.matches, 1):
-        text = match.metadata.get("text", "[no text]")
-        print(f"[{i}] Score: {match.score:.4f} | {text[:120]}{'...' if len(text)>120 else ''}")
+    # === 打印结果调试 ===
+    st.write(f"**🔎 Query:** {user_query}")
+    st.write(f"**📊 Top-{top_k} results retrieved from Pinecone**")
+    for i, m in enumerate(search_resp.matches, 1):
+        text_preview = m.metadata.get("text", "[no text]")[:120]
+        st.write(f"{i}. ({m.score:.3f}) {text_preview}")
 
     return query_vector, search_resp
 
+# ==============================================================
+# 🧩 BUILD RAG PROMPT
+# ==============================================================
+def build_augmented_prompt(user_query: str, search_results) -> str:
+    context_chunks = []
+    for i, match in enumerate(search_results.matches, 1):
+        doc_text = (
+            match.metadata.get("text")
+            or match.metadata.get("chunk_text", "")
+        )
+        context_chunks.append(f"[Document {i}]\n{doc_text.strip()}")
 
-# -------------------- SIDEBAR --------------------
+    context_block = "\n\n".join(context_chunks)
+
+    augmented_prompt = f"""
+You are an intelligent assistant. Please answer the user's question
+strictly based on the context provided below.
+
+Guidelines:
+1. Only use the information from the **Context** section.
+2. Do NOT fabricate or guess.
+3. If the answer is not present in the context, reply with:
+   "The provided context does not contain the answer."
+
+User Query:
+{user_query}
+
+Context:
+{context_block}
+""".strip()
+    return augmented_prompt
+
+# ==============================================================
+# 🧠 RAG ANSWER VIA AZURE OPENAI
+# ==============================================================
+def generate_rag_answer(user_query, openai_client, search_results):
+    prompt = build_augmented_prompt(user_query, search_results)
+    response = openai_client.chat.completions.create(
+        model="gpt-35-turbo",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.2,
+        max_tokens=768
+    )
+    return response.choices[0].message.content.strip()
+
+# ==============================================================
+# 📜 SIDEBAR
+# ==============================================================
 st.sidebar.title("💬 Chat History")
 
 api_key = st.sidebar.text_input("Enter your HKUST API key", type="password")
@@ -128,12 +179,10 @@ else:
             st.session_state.page = "result"
             st.rerun()
 
-
-# ===============================================================
-# PAGE 1: HOME
-# ===============================================================
+# ==============================================================
+# 🏠 PAGE 1: HOME
+# ==============================================================
 if st.session_state.page == "home":
-
     st.markdown("<h1>🔍 Intelligent Semantic Search Application</h1>", unsafe_allow_html=True)
     st.caption("Using Pinecone + Azure OpenAI for semantic search")
 
@@ -170,37 +219,30 @@ if st.session_state.page == "home":
             st.error("Please enter your API key in sidebar first.")
             st.stop()
 
-        # Generate embedding
-        with st.spinner("Generating embeddings..."):
+        with st.spinner("Connecting to Azure & Pinecone..."):
             client = get_azure_client(st.session_state.openai_api_key)
-            emb = client.embeddings.create(input=user_query, model="text-embedding-ada-002")
-            query_vector = emb.data[0].embedding
-            dim = len(query_vector)
+            query_vec, results = semantic_search(user_query, client, top_k=5)
 
-        # Semantic search
-        with st.spinner("Running semantic search..."):
+        with st.spinner("Generating intelligent answer..."):
             try:
-                results = semantic_search(query_vector, top_k=5)
+                answer = generate_rag_answer(user_query, client, results)
             except Exception as e:
-                st.error(f"Error querying Pinecone: {e}")
+                st.error(f"Error generating answer: {e}")
                 st.stop()
 
-        # Simulated answer
-        answer = "This is an intelligent answer generated using semantic search of relevant documents."
         st.session_state.current_result = {
             "query": user_query,
             "answer": answer,
-            "vector_dim": dim,
-            "vector_sample": query_vector[:10],
+            "vector_dim": len(query_vec),
+            "vector_sample": query_vec[:10],
             "results": results.matches
         }
         st.session_state.page = "result"
         st.rerun()
 
-
-# ===============================================================
-# PAGE 2: RESULTS
-# ===============================================================
+# ==============================================================
+# 📄 PAGE 2: RESULTS
+# ==============================================================
 if st.session_state.page == "result":
     r = st.session_state.current_result
 
@@ -218,19 +260,11 @@ if st.session_state.page == "result":
 
     st.markdown("---")
     st.markdown("### 📊 Search Statistics")
-    st.markdown("""
-    **How Semantic Search Works:**
-    - Convert question into a numerical vector (embedding)
-    - Capture semantic meaning
-    - Calculate similarity between question and document embeddings
-    - Most relevant documents are returned based on semantic similarity
-    """)
     st.metric("Embedding Dimension", r["vector_dim"])
     st.write("First 10 embedding values:")
     st.code(str(r["vector_sample"]))
 
     st.markdown("---")
-    # ======== Only Save History Button ==========
     if st.button("💾 Save to History", use_container_width=True):
         title = r["query"][:40]
         st.session_state.conversation_titles.append(title)
