@@ -128,7 +128,7 @@ User Question:
 {user_query}
 
 Context:
-{context}
+{context_block}
 """
     return augmented_prompt
 
