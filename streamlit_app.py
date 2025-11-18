@@ -161,7 +161,7 @@ if api_key:
 st.sidebar.markdown("---")
 
 # API check
-if st.sidebar.button("🔄 Test Connection", use_container_width=True):
+if st.sidebar.button("Test Connection", use_container_width=True):
     with st.spinner("Testing API connection..."):
         try:
             client = get_azure_client(st.session_state["OPENAI_API_KEY"])
@@ -173,11 +173,11 @@ if st.sidebar.button("🔄 Test Connection", use_container_width=True):
         except Exception as e:
             st.sidebar.error(f"❌ Connection failed: {e}")
 
-st.sidebar.header("⚙️ Search Configuration")
+st.sidebar.header("Search Configuration")
 top_k = st.sidebar.slider("Number of documents to return", 1, 10, 3)
 
 # --- 新建会话按钮 ---
-if st.sidebar.button("🆕 New Chat", use_container_width=True):
+if st.sidebar.button("New Chat", use_container_width=True):
     st.session_state["conversations"].append([])
     st.session_state["conversation_titles"].append("New Chat")
     st.session_state["active_chat_index"] = len(st.session_state["conversations"]) - 1
@@ -185,7 +185,7 @@ if st.sidebar.button("🆕 New Chat", use_container_width=True):
     st.rerun()
 
 # --- 清除所有历史按钮 ---
-if st.sidebar.button("🗑️ Clear All History", use_container_width=True):
+if st.sidebar.button("Clear All History", use_container_width=True):
     st.session_state["conversations"].clear()
     st.session_state["conversation_titles"].clear()
     st.session_state["active_chat_index"] = None
@@ -231,7 +231,7 @@ current_chat = st.session_state["conversations"][chat_index]
 chat_title = st.session_state["conversation_titles"][chat_index]
 
 # 显示当前聊天标题
-st.subheader(f"💬 {chat_title}")
+st.subheader(f"{chat_title}")
 
 # --- 展示已有消息 ---
 for msg in current_chat:
@@ -309,7 +309,7 @@ if user_query and user_query != st.session_state.get("last_processed_query"):
                 st.session_state["last_processed_query"] = user_query
 
 # ========= 显示embedding信息 =========
-with st.expander("🔍 Embedding Information"):
+with st.expander("Embedding Information"):
     st.markdown("""
     **How Semantic Search Works:**
     - Convert question into a numerical vector (embedding)
@@ -325,7 +325,7 @@ with st.expander("🔍 Embedding Information"):
         st.write(f"- {doc['content']}")
 
 # ========= 显示会话信息 =========
-with st.expander("📊 Session Information"):
+with st.expander("Session Information"):
     st.write(f"**Active Chat:** {chat_title}")
     st.write(f"**Total Conversations:** {len(st.session_state['conversations'])}")
     st.write(f"**Messages in Current Chat:** {len(current_chat)}")
