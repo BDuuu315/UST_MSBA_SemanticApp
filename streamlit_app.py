@@ -5,7 +5,7 @@ from openai import AzureOpenAI
 from pinecone import Pinecone
 from datetime import datetime
 
-# Configure Streamlit page layout — title and width. //Jayson
+# Configure Streamlit page layout //Jayson & Greta
 st.set_page_config(page_title="RAG Semantic Search Chat", layout="wide")
 
 st.markdown("""
@@ -31,10 +31,10 @@ textarea {
 </style>
 """, unsafe_allow_html=True)
 
-# HKUST Business Logo! //Jayson
 st.image("Logo_USTBusinessSchool.svg", width=120)
 
-# initialize session variables to store state between UI interactions://Jayson
+
+# initialize session variables to store state between UI interactions //Erin
 def init_session():
     defaults = {
         "page": "home",
@@ -68,7 +68,7 @@ def get_pinecone_client():
     pc = Pinecone(api_key=PINECONE_API_KEY)
     return pc.Index(PINECONE_INDEX_NAME)
 
-# Semantic Search function, embedding //Erin
+# Semantic Search function, embedding //Frank & Erin
 def semantic_search(user_query: str, openai_client, top_k: int = 10):
     index = get_pinecone_client()
 
@@ -91,7 +91,7 @@ def semantic_search(user_query: str, openai_client, top_k: int = 10):
     return query_vector, filtered_matches
 
 
-# RAG Prompt, in case can't find a correct answer from our Pinecone index, we allows our App to search direct from GPT //Alan
+# RAG Prompt, in case can't find a correct answer from our Pinecone index, we allow our App to search direct from GPT //Alan & Erin
 def build_augmented_prompt(user_query: str, search_results) -> str:
     context_chunks = []
     for i, match in enumerate(search_results, 1):
@@ -119,7 +119,7 @@ Context:
     return augmented_prompt
 
 
-# Generate Answer
+# Generate Answer // Alan
 def generate_contextual_ai_response(user_query: str, openai_client, top_k: int = 10):
     try:
         # Segmentation
@@ -156,7 +156,8 @@ def generate_contextual_ai_response(user_query: str, openai_client, top_k: int =
         return {
             "query": user_query,
             "answer": answer,
-            #"confidence": confidence,
+            #"confidence": confidence
+            #obtaining the true confidence too difficult, we decided to optimize it in the next iteration.
             "sources": [m.metadata.get("source", f"Document {i+1}") for i, m in enumerate(matches)],
             "vector_dim": len(query_vec),
             "vector_sample": query_vec[:10],
@@ -171,7 +172,7 @@ def generate_contextual_ai_response(user_query: str, openai_client, top_k: int =
         }
 
 
-# Sidebar 
+# Sidebar //Greta & Jayson
 st.sidebar.title("History & API Settings")
 
 api_key = st.sidebar.text_input("Enter your HKUST Azure OpenAI API Key", type="password")
@@ -197,7 +198,7 @@ else:
             st.session_state.current_result = st.session_state.conversations[i]
             st.rerun()
 
-# Main Area (Search Page)
+# Main Area (Search Page) //Greta & Jayson
 if st.session_state.page == "home":
     st.title("Semantic Search for movie ideas")
     st.caption("Using this App for seeking inspiration for a screenplay")
@@ -239,7 +240,7 @@ if st.session_state.page == "home":
         st.session_state.page = "result"
         st.rerun()
 
-#Answering Page
+#Answering Page //Greta
 if st.session_state.page == "result":
     result = st.session_state.get("current_result", {})
 
