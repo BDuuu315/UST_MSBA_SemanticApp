@@ -62,20 +62,15 @@ PINECONE_API_KEY = "pcsk_JPQMS_zQZ9MfrD4aSEe8b69PoxsjcsvoSPEHpzgYGt4GPm8bv7ED95W
 PINECONE_INDEX_NAME = "msba-lab-1537"
 PINECONE_NAMESPACE = "default"
 
-@st.cache_resource
-def get_pinecone_client():
-    pc = Pinecone(api_key=PINECONE_API_KEY)
-    index = pc.Index(PINECONE_INDEX_NAME)
-    return index
+pc = Pinecone(api_key=PINECONE_API_KEY)
+index = pc.Index(PINECONE_INDEX_NAME)
 
-# -------------------- 相似度计算 --------------------
+index.describe_index_stats()
+
 def cosine_similarity(a: np.ndarray, b: np.ndarray) -> float:
     return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)))
 
-# -------------------- 语义检索 --------------------
-def semantic_search(user_query: str, openai_client, top_k: int = 10):
-    index = get_pinecone_client()
-
+def semantic_search(user_query: str, top_k: int = 5):
     emb_resp = openai_client.embeddings.create(
         input=user_query,
         model="text-embedding-ada-002"
@@ -90,26 +85,75 @@ def semantic_search(user_query: str, openai_client, top_k: int = 10):
         include_values=False
     )
 
-    # 过滤相似度高于阈值 0.75 的结果
-    filtered_matches = [m for m in search_resp.matches if m.score >= 0.75]
+    print(f"\nQuery: {user_query}\n")
+    print("-" * 60)
+    for i, match in enumerate(search_resp.matches, 1):
+        text = (
+            match.metadata.get("text") or
+            match.metadata.get("chunk_text") or
+            match.metadata.get("content") or
+            "[no text]"
+        )
+        print(f"[{i}] Score: {match.score:.4f} | {text[:120]}{'...' if len(text)>120 else ''}")
 
-    return query_vector, filtered_matches
+    return query_vector, search_resp
 
-# -------------------- 构建增强提示 (RAG prompt) --------------------
 def build_augmented_prompt(user_query: str, search_results) -> str:
     context_chunks = []
-    for i, match in enumerate(search_results, 1):
+    for i, match in enumerate(search_results.matches, 1):
         text = (
-            match.metadata.get("text")
-            or match.metadata.get("chunk_text")
-            or match.metadata.get("content")
-            or ""
+            match.metadata.get("text") or
+            match.metadata.get("chunk_text") or
+            match.metadata.get("content") or
+            ""
         )
         context_chunks.append(f"[Document {i}]\n{text.strip()}")
+
     context_block = "\n\n".join(context_chunks)
 
     augmented_prompt = f"""
-You are an intelligent assistant. Please answer the user's question strictly based on the context provided below.
+You are a knowledgeable assistant. Answer the user's question strictly using only the information from the Context below.
+
+Rules:
+- Use only facts present in the Context.
+- Do not add external knowledge or make anything up.
+- If the Context does not contain enough information, reply exactly:
+  "The provided context does not contain sufficient information to answer this question."
+
+User Question:
+{user_query}
+
+Context:
+{context_block}
+
+Answer:
+""".strip()
+
+    return augmented_prompt
+# ============================================
+# Part 4: Build augmented prompt (RAG)
+# ============================================
+
+def build_augmented_prompt(user_query: str, search_results) -> str:
+    """
+    Combine the user query with the retrieved documents from Pinecone
+    to form a retrieval-augmented prompt.
+    """
+    context_chunks = []
+
+    for i, match in enumerate(search_results.matches, start=1):
+        # 在 upsert 的时候你们应该把原文存到 metadata["text"] 或 metadata["chunk_text"]
+        doc_text = (
+            match.metadata.get("text")
+            or match.metadata.get("chunk_text", "")
+        )
+        context_chunks.append(f"[Document {i}]\n{doc_text}")
+
+    context_block = "\n\n".join(context_chunks)
+
+    augmented_prompt = f"""
+You are an intelligent assistant. Please answer the user's question
+strictly based on the context provided below.
 
 Guidelines:
 1. Only use the information from the **Context** section.
@@ -117,7 +161,7 @@ Guidelines:
 3. If the answer is not present in the context, reply with:
    "The provided context does not contain the answer."
 
-User Question:
+User Query:
 {user_query}
 
 Context:
@@ -126,9 +170,14 @@ Context:
 
     return augmented_prompt
 
-# -------------------- 用 Azure 生成答案 --------------------
+
+# 用 Part 3 + Part 4 串起来试一下
+aug_prompt = build_augmented_prompt(user_query, search_results)
+print("\n===== Augmented Prompt (preview) =====\n")
+print(aug_prompt[:800] + " ...")
+
 def call_llm_generate_answer(
-        augmented_prompt: str,
+        build_augmented_prompt: str,
     model: str = "gpt",  
     temperature: float = 0.2,
     max_tokens: int = 1024
@@ -140,7 +189,7 @@ def call_llm_generate_answer(
         response = openai_client.chat.completions.create(
             model=model,
             messages=[
-                {"role": "user", "content": augmented_prompt}
+                {"role": "user", "content": build_augmented_prompt}
             ],
             temperature=temperature,
             max_tokens= max_tokens,
