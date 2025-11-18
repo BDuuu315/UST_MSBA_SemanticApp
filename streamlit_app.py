@@ -190,7 +190,7 @@ def generate_contextual_ai_response(user_query: str, openai_client, top_k: int =
 
 
 # ===============================================================
-# 🎛️ Sidebar：会话与配置
+# Sidebar：会话与配置
 # ===============================================================
 st.sidebar.title("History & API Settings")
 
@@ -211,7 +211,7 @@ if len(st.session_state["conversations"]) == 0:
     st.sidebar.info("No saved conversation.")
 else:
     for i, title in enumerate(st.session_state["conversation_titles"]):
-        if st.sidebar.button(f"🗂 {title}", key=f"hist_{i}", use_container_width=True):
+        if st.sidebar.button(f"{title}", key=f"hist_{i}", use_container_width=True):
             st.session_state.active_chat_index = i
             st.session_state.page = "result"
             st.session_state.current_result = st.session_state.conversations[i]
@@ -261,9 +261,7 @@ if st.session_state.page == "home":
         st.session_state.page = "result"
         st.rerun()
 
-# ===============================================================
-# 📊 页面二：结果展示
-# ===============================================================
+#Answering Page
 if st.session_state.page == "result":
     result = st.session_state.get("current_result", {})
 
@@ -277,7 +275,7 @@ if st.session_state.page == "result":
         st.markdown(f"**{i}.** (score: {m.score:.3f}) — {preview}...")
 
     st.markdown("---")
-    st.markdown("### 📈 Embedding + Search Info")
+    st.markdown("Embedding + Search Info")
     st.metric("Embedding Dimension", result.get("vector_dim", 0))
     st.metric("Confidence Score", result.get("confidence", 0))
     st.code(str(result.get("vector_sample", [])))
@@ -289,7 +287,7 @@ if st.session_state.page == "result":
             if title not in st.session_state.conversation_titles:
                 st.session_state.conversation_titles.append(title)
                 st.session_state.conversations.append(result)
-            st.success("✅ Saved to history.")
+            st.success("Saved to history.")
 
     with col2:
         if st.button("Return to Search", use_container_width=True):
