@@ -4,10 +4,10 @@ import numpy as np
 from openai import AzureOpenAI
 from pinecone import Pinecone
 
-# -------------------- PAGE CONFIG --------------------
+# -------------------- 页面配置 --------------------
 st.set_page_config(page_title="Intelligent Semantic Search", layout="wide")
 
-# -------------------- STYLES --------------------
+# -------------------- 样式 --------------------
 st.markdown("""
 <style>
 body, [data-testid="stAppViewContainer"] {
@@ -33,8 +33,7 @@ textarea {
 
 st.image("Logo_USTBusinessSchool.svg", width=120)
 
-
-# -------------------- INIT SESSION --------------------
+# -------------------- 初始化状态 --------------------
 def init_session():
     defaults = {
         "page": "home",
@@ -49,8 +48,7 @@ def init_session():
 
 init_session()
 
-
-# -------------------- AZURE OPENAI --------------------
+# -------------------- 初始化 Azure --------------------
 @st.cache_resource
 def get_azure_client(api_key):
     return AzureOpenAI(
@@ -59,8 +57,7 @@ def get_azure_client(api_key):
         azure_endpoint="https://hkust.azure-api.net"
     )
 
-
-# -------------------- PINECONE --------------------
+# -------------------- 初始化 Pinecone --------------------
 @st.cache_resource
 def get_pinecone_client():
     pc = Pinecone(api_key="pcsk_JPQMS_zQZ9MfrD4aSEe8b69PoxsjcsvoSPEHpzgYGt4GPm8bv7ED95Wjy4u7vPmxSnjj")
@@ -70,14 +67,12 @@ def get_pinecone_client():
     )
     return index
 
-
-# -------------------- SEMANTIC SEARCH --------------------
+# -------------------- 语义搜索函数 --------------------
 def semantic_search(vector, top_k=5):
     index = get_pinecone_client()
     return index.query(vector=vector, top_k=top_k, include_metadata=True)
 
-
-# -------------------- SIDEBAR --------------------
+# -------------------- Sidebar --------------------
 st.sidebar.title("💬 Chat History")
 
 api_key = st.sidebar.text_input("Enter your HKUST API key", type="password")
@@ -103,12 +98,10 @@ else:
             st.session_state.page = "result"
             st.rerun()
 
-
 # ===============================================================
-# PAGE 1: HOME
+# 页面一：首页
 # ===============================================================
 if st.session_state.page == "home":
-
     st.markdown("<h1>🔍 Intelligent Semantic Search Application</h1>", unsafe_allow_html=True)
     st.caption("Using Pinecone + Azure OpenAI for semantic search")
 
@@ -145,14 +138,14 @@ if st.session_state.page == "home":
             st.error("Please enter your API key in sidebar first.")
             st.stop()
 
-        # Generate embedding
+        # 生成 embedding
         with st.spinner("Generating embeddings..."):
             client = get_azure_client(st.session_state.openai_api_key)
             emb = client.embeddings.create(input=user_query, model="text-embedding-ada-002")
             query_vector = emb.data[0].embedding
             dim = len(query_vector)
 
-        # Semantic search
+        # Pinecone 语义搜索
         with st.spinner("Running semantic search..."):
             try:
                 results = semantic_search(query_vector, top_k=5)
@@ -160,8 +153,8 @@ if st.session_state.page == "home":
                 st.error(f"Error querying Pinecone: {e}")
                 st.stop()
 
-        # Simulated answer
-        answer = "This is an intelligent answer generated using semantic search of relevant documents."
+        # 模拟答案
+        answer = "This is an intelligent answer generated using semantic search based on relevant documents."
         st.session_state.current_result = {
             "query": user_query,
             "answer": answer,
@@ -172,9 +165,8 @@ if st.session_state.page == "home":
         st.session_state.page = "result"
         st.rerun()
 
-
 # ===============================================================
-# PAGE 2: RESULTS
+# 页面二：结果展示
 # ===============================================================
 if st.session_state.page == "result":
     r = st.session_state.current_result
@@ -205,9 +197,18 @@ if st.session_state.page == "result":
     st.code(str(r["vector_sample"]))
 
     st.markdown("---")
-    # ======== Only Save History Button ==========
-    if st.button("💾 Save to History", use_container_width=True):
-        title = r["query"][:40]
-        st.session_state.conversation_titles.append(title)
-        st.session_state.conversations.append(r)
-        st.success("✅ Result saved to sidebar history.")
+
+    # ====== Save History 和 Search Again ======
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("💾 Save History", use_container_width=True):
+            title = r["query"][:40]
+            if title not in st.session_state.conversation_titles:
+                st.session_state.conversation_titles.append(title)
+                st.session_state.conversations.append(r)
+            st.success("✅ Result saved to sidebar history.")
+
+    with col2:
+        if st.button("🔁 Search Again", use_container_width=True):
+            st.session_state.page = "home"
+            st.rerun()
