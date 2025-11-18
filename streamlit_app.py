@@ -6,14 +6,14 @@ from pinecone import Pinecone
 from datetime import datetime
 
 # ===============================================================
-# 📌 页面配置 & 样式
+# 页面配置 & 样式
 # ===============================================================
-st.set_page_config(page_title="RAG Semantic Search Chat", layout="wide")
+st.set_page_config(page_title="Movie Search AI for 6670G Students", layout="wide")
 
 st.markdown("""
 <style>
 body, [data-testid="stAppViewContainer"] {
-    background-color: #0E1117;
+    background-color: #FFFFFF;
     color: #F5F5F5;
 }
 h1, h2, h3, h4, h5 { color: #FFFFFF; }
@@ -36,7 +36,7 @@ textarea {
 st.image("Logo_USTBusinessSchool.svg", width=120)
 
 # ===============================================================
-# 📌 初始化状态管理
+# 初始化状态管理
 # ===============================================================
 def init_session():
     defaults = {
@@ -53,7 +53,7 @@ def init_session():
 init_session()
 
 # ===============================================================
-# 📌 Azure + Pinecone 初始化
+# Azure + Pinecone 初始化
 # ===============================================================
 @st.cache_resource
 def get_azure_client(api_key):
@@ -73,7 +73,7 @@ def get_pinecone_client():
     return pc.Index(PINECONE_INDEX_NAME)
 
 # ===============================================================
-# 🧠 语义搜索函数 (Semantic Search)
+# 语义搜索函数 (Semantic Search)
 # ===============================================================
 def semantic_search(user_query: str, openai_client, top_k: int = 10):
     """
@@ -190,9 +190,9 @@ def generate_contextual_ai_response(user_query: str, openai_client, top_k: int =
 
 
 # ===============================================================
-# 🎛️ Sidebar：会话与配置
+# Sidebar：会话与配置
 # ===============================================================
-st.sidebar.title("💬 History & API Settings")
+st.sidebar.title("History & API Settings")
 
 api_key = st.sidebar.text_input("Enter your HKUST Azure OpenAI API Key", type="password")
 if api_key:
@@ -211,26 +211,26 @@ if len(st.session_state["conversations"]) == 0:
     st.sidebar.info("No saved conversation.")
 else:
     for i, title in enumerate(st.session_state["conversation_titles"]):
-        if st.sidebar.button(f"🗂 {title}", key=f"hist_{i}", use_container_width=True):
+        if st.sidebar.button(f"{title}", key=f"hist_{i}", use_container_width=True):
             st.session_state.active_chat_index = i
             st.session_state.page = "result"
             st.session_state.current_result = st.session_state.conversations[i]
             st.rerun()
 
 # ===============================================================
-# 🏠 页面一：主搜索界面
+# 页面一：主搜索界面
 # ===============================================================
 if st.session_state.page == "home":
-    st.markdown("## 🔍 Intelligent Semantic Search – RAG Enhanced")
-    st.caption("Using Pinecone + Azure OpenAI for Semantic Context Retrieval")
+    st.markdown("Semantic Search")
+    st.caption("Using Pinecone + Azure OpenAI for Searching movie summary")
 
-    user_query = st.text_area("📝 Enter your question", placeholder="e.g., What MBA programs does HKUST offer?")
+    user_query = st.text_area("Enter your question", placeholder="e.g., A film with imaginary film")
     col1, col2 = st.columns([1, 0.5])
 
     with col1:
-        start_btn = st.button("🚀 Start Search", use_container_width=True)
+        start_btn = st.button("Start Search", use_container_width=True)
     with col2:
-        test_btn = st.button("🔄 Test Connection", use_container_width=True)
+        test_btn = st.button("Test Connection", use_container_width=True)
 
     if test_btn:
         if not api_key:
@@ -250,7 +250,7 @@ if st.session_state.page == "home":
             st.stop()
 
         if not api_key:
-            st.error("Please input your Azure API key first.")
+            st.error("Please input your HKUST Azure API key first.")
             st.stop()
 
         with st.spinner("Performing RAG search and generating answer..."):
@@ -267,31 +267,31 @@ if st.session_state.page == "home":
 if st.session_state.page == "result":
     result = st.session_state.get("current_result", {})
 
-    st.markdown("## 🤖 Intelligent Answer (RAG-based)")
+    st.markdown("## Intelligent Answer (RAG-based)")
     st.info(result.get("answer", "No answer."))
 
     st.markdown("---")
-    st.markdown(f"### 📜 Relevant Documents ({len(result.get('results', []))})")
+    st.markdown(f"Relevant Documents ({len(result.get('results', []))})")
     for i, m in enumerate(result.get("results", []), 1):
         preview = (m.metadata.get("text") or m.metadata.get("chunk_text") or m.metadata.get("content") or "")[:150]
         st.markdown(f"**{i}.** (score: {m.score:.3f}) — {preview}...")
 
     st.markdown("---")
-    st.markdown("### 📈 Embedding + Search Info")
+    st.markdown("Embedding + Search Info")
     st.metric("Embedding Dimension", result.get("vector_dim", 0))
     st.metric("Confidence Score", result.get("confidence", 0))
     st.code(str(result.get("vector_sample", [])))
 
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("💾 Save History", use_container_width=True):
+        if st.button("Save History", use_container_width=True):
             title = result["query"][:40]
             if title not in st.session_state.conversation_titles:
                 st.session_state.conversation_titles.append(title)
                 st.session_state.conversations.append(result)
-            st.success("✅ Saved to history.")
+            st.success("Saved to history.")
 
     with col2:
-        if st.button("🔁 Return to Search", use_container_width=True):
+        if st.button("Return to Search", use_container_width=True):
             st.session_state.page = "home"
             st.rerun()
