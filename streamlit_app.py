@@ -131,7 +131,7 @@ Context:
 def call_llm_generate_answer(
     openai_client,
     build_augmented_prompt: str,
-    model: str = "gpt-4",
+    model: str = "gpt-35-turbo",
     temperature: float = 0.2,
     max_tokens: int = 1024
 ) -> Dict[str, Any]:
