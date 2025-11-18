@@ -185,6 +185,13 @@ if st.session_state.page == "result":
 
     st.markdown("---")
     st.markdown("### Search Statistics")
+
+    st.write("**Search Information:**")
+    st.write(f"- 📝 Query Content: {current_search['query']}")
+    st.write(f"- 📊 Documents Returned: {len(current_search['results'])}")
+    st.write(f"- 🎯 Highest Similarity: {df['score'].max():.3f}")
+    st.write(f"- 📍 Average Similarity: {df['score'].mean():.3f}")
+    st.write(f"- ⏰ Search Time: {current_search['timestamp']}")
     st.markdown("""
     **How Semantic Search Works:**
     - Convert question into a numerical vector (embedding)
