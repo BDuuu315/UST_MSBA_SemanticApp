@@ -4,7 +4,7 @@ from pinecone import Pinecone
 from openai import AzureOpenAI
 
 # ===== 基本配置 =====
-PINECONE_API_KEY = "你的 Pinecone API Key"
+PINECONE_API_KEY = "pcsk_6jQ4eB_EhFPkDa8rZZLJtXo5Ry6n5yqQEFsSjpXgoudTbgAumZqyEyJzWX3T3g3X6ZXED1"
 PINECONE_INDEX_NAME = "sample-movies"
 PINECONE_ENV_HOST = "https://sample-movies-uch9hnu.svc.aped-4627-b74a.pinecone.io"
 PINECONE_NAMESPACE = "__default__"
