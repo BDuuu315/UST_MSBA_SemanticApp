@@ -127,19 +127,52 @@ Context:
     return augmented_prompt
 
 # -------------------- 用 Azure 生成答案 --------------------
-def rag_answer_with_azure(prompt: str, client, model="gpt", temperature=0.2, max_tokens=1536):
+def call_llm_generate_answer(
+        build_augmented_prompt: str,
+    model: str = "gpt",  
+    temperature: float = 0.2,
+    max_tokens: int = 1024
+    ) -> Dict[str, Any]:
+   
     try:
-        response = client.chat.completions.create(
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] Currently calling {model}...")
+
+        response = openai_client.chat.completions.create(
             model=model,
-            messages=[{"role": "user", "content": prompt}],
+            messages=[
+                {"role": "user", "content": build_augmented_prompt}
+            ],
             temperature=temperature,
-            max_tokens=max_tokens,
-            top_p=0.8
-        )
-        return response.choices[0].message.content.strip()
+            max_tokens= max_tokens,
+            top_p=0.8,
+            presence_penalty=0.2,
+            frequency_penalty=0.2
+    )
+
+        answer = response.choices[0].message.content.strip()
+        usage = response.usage
+
+        print(f"Token Usage: prompt={usage.prompt_tokens}, completion={usage.completion_tokens}, total={usage.total_tokens}")
+
+        return {
+            "answer": answer,
+            "model": model,
+            "usage": {
+                "prompt_tokens": usage.prompt_tokens,
+                "completion_tokens": usage.completion_tokens,
+                "total_tokens": usage.total_tokens
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+
     except Exception as e:
-        st.error(f"Azure RAG generation failed: {e}")
-        return "An error occurred while generating the response."
+        error_msg = f"[ChatGPT Calling Failed] {str(e)}"
+        print(error_msg)
+    return {
+        "answer": "An error occurred while generating the response",
+        "error": str(e),
+        "timestamp": datetime.now().isoformat()
+        }
 
 # -------------------- Sidebar --------------------
 st.sidebar.title("💬 Chat History")
