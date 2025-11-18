@@ -13,7 +13,7 @@ st.set_page_config(page_title="Movie Search AI for 6670G Students", layout="wide
 st.markdown("""
 <style>
 body, [data-testid="stAppViewContainer"] {
-    background-color: #FFFFFF;
+    background-color: #0E1117;
     color: #F5F5F5;
 }
 h1, h2, h3, h4, h5 { color: #FFFFFF; }
