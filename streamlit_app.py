@@ -26,6 +26,25 @@ st.markdown(
         left: 15px;
         z-index: 100;
     }
+
+    section[data-testid="stSidebar"] {
+        width: 380px !important;
+        min-width: 380px !important;
+        height: 100vh;
+        overflow: auto;
+    }
+    section[data-testid="stSidebar"] > div {
+        width: 380px !important;
+        padding-top: 2rem;
+        height: 100%;
+    }
+    .stSidebar .stButton>button {
+        width: 100%;
+    }
+    .main .block-container {
+        padding-left: 400px;
+        padding-right: 2rem;
+    }
     </style>
     """,
     unsafe_allow_html=True
@@ -67,6 +86,21 @@ if api_key:
 
 st.sidebar.markdown("---")
 
+#API check
+
+if st.sidebar.button("🔄 Test Connection", use_container_width=True):
+    with st.spinner("Testing API connection..."):
+        try:
+            client = get_azure_client(st.session_state["OPENAI_API_KEY"])
+            response = client.embeddings.create(input="Hello world", model="text-embedding-ada-002")
+            st.sidebar.success("✅ Azure OpenAI connection successful!")
+        except Exception as e:
+            st.sidebar.error(f"❌ Connection failed: {e}")
+
+
+st.sidebar.header("⚙️ Search Configuration")
+top_k = st.sidebar.slider("Number of documents to return", 1, 10, 3)
+
 # --- 新建会话按钮 ---
 if st.sidebar.button("🆕 New Chat", use_container_width=True):
     st.session_state["conversations"].append([])
@@ -102,6 +136,12 @@ else:
 # ========= 主体部分 =========
 st.title("Semantic Search AI Chat for BA Users")
 st.caption("A Semantic Search App prototype for ISOM 6670G.")
+
+if len(st.session_state["conversations"]) == 0:
+    st.session_state["conversations"].append([])
+    st.session_state["conversation_titles"].append("New Chat")
+    st.session_state["active_chat_index"] = 0
+    st.rerun()
 
 # --- 输入新消息 ---
 user_query = st.text_input(
