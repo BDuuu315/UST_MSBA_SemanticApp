@@ -140,7 +140,7 @@ def call_llm_generate_answer(
         response = openai_client.chat.completions.create(
             model=model,
             messages=[
-                {"role": "user", "content": build_augmented_prompt}
+                {"role": "user", "content": augmented_prompt}
             ],
             temperature=temperature,
             max_tokens= max_tokens,
