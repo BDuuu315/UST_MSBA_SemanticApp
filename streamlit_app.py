@@ -1,92 +1,81 @@
-import streamlit as st
-from openai import OpenAI
 from pinecone import Pinecone
-import pandas as pd
 
-# ----------------------------
-# 配置项
-# ----------------------------
-OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
-PINECONE_API_KEY = st.secrets["PINECONE_API_KEY"]
-PINECONE_INDEX_NAME = "sample-movies"  # 你的索引名（与控制台一致）
+# --- 新增: Pinecone初始化 ---
+# 你可以选择在代码里直接写 key，或在 sidebar 添加输入框
+PINECONE_API_KEY = st.sidebar.text_input(
+    "Enter your Pinecone API Key",
+    type="password",
+    help="Paste your Pinecone API key here."
+)
+PINECONE_INDEX_NAME = st.sidebar.text_input(
+    "Enter your Pinecone Index Name",
+    value="sample-movies",  # 默认名
+    help="The name of your Pinecone index."
+)
+top_k = st.sidebar.slider("Number of documents to return", 1, 10, 3)
 
-# ----------------------------
-# 初始化客户端
-# ----------------------------
+# 初始化 Pinecone 客户端（缓存资源）
 @st.cache_resource
-def get_clients():
-    openai_client = OpenAI(api_key=OPENAI_API_KEY)
-    pc = Pinecone(api_key=PINECONE_API_KEY)
-    index = pc.Index(PINECONE_INDEX_NAME)
-    return openai_client, index
+def get_pinecone_client(api_key):
+    pc = Pinecone(api_key=api_key)
+    return pc
 
-openai_client, index = get_clients()
+# 在主对话逻辑中，替换原有模拟搜索部分
+if user_query:
+    if not st.session_state.get("OPENAI_API_KEY"):
+        st.error("Please input your HKUST OpenAI API key first.")
+        st.stop()
 
-# ----------------------------
-# 页面配置
-# ----------------------------
-st.set_page_config(
-    page_title="🎬 Movie Semantic Search",
-    page_icon="🎞️",
-    layout="wide"
-)
-st.title("🎬 Movie Semantic Search (Powered by Pinecone + OpenAI)")
+    if not PINECONE_API_KEY:
+        st.error("Please input your Pinecone API key in the sidebar.")
+        st.stop()
 
-# ----------------------------
-# 用户输入
-# ----------------------------
-query_text = st.text_input(
-    "🔍 输入你的语义搜索内容（例如：'电影中主角保护外星种族'）",
-    placeholder="try: 'About aliens and a human connecting emotionally'",
-)
+    # --- 显示 & 缓存用户输入 ---
+    st.chat_message("user").write(user_query)
+    current_chat.append({"role": "user", "content": user_query})
 
-k = st.slider("返回 Top-K 结果", min_value=1, max_value=10, value=5)
+    if len(current_chat) == 1:
+        st.session_state["conversation_titles"][chat_index] = user_query[:40]
 
-# ----------------------------
-# 执行搜索
-# ----------------------------
-if st.button("开始搜索") and query_text.strip():
-    with st.spinner("Embedding + Searching..."):
-        # 1️⃣ 生成 query embedding
-        response = openai_client.embeddings.create(
-            model="text-embedding-3-small",
-            input=query_text
-        )
-        query_embedding = response.data[0].embedding
-
-        # 2️⃣ 查询 Pinecone
-        results = index.query(
-            vector=query_embedding,
-            top_k=k,
-            include_metadata=True
-        )
-
-    st.success(f"找到 {len(results.matches)} 条相关记录")
-
-    # ----------------------------
-    # 展示结果
-    # ----------------------------
-    for i, match in enumerate(results.matches):
-        meta = match.metadata
-        with st.container():
-            st.markdown(f"### 🏷️ {i+1}")
-            st.markdown(f"**ID:** `{match.id}`")
-            st.markdown(f"**SCORE:** `{match.score:.5f}`")
-            st.markdown(
-                f"""
-                - **title:** *{meta.get('title', 'N/A')}*  
-                - **year:** {meta.get('year', 'N/A')}  
-                - **genre:** {meta.get('genre', 'N/A')}  
-                - **box-office:** {meta.get('box-office', 'N/A'):,}  
-                - **summary:** {meta.get('summary', 'N/A')}
-                """
+    with st.spinner("Embedding + Searching Pinecone..."):
+        try:
+            # 初始化 Azure OpenAI
+            openai_client = get_azure_client(st.session_state["OPENAI_API_KEY"])
+            # 生成 embedding
+            response = openai_client.embeddings.create(
+                input=user_query,
+                model="text-embedding-ada-002"
             )
-            st.divider()
+            query_vector = response.data[0].embedding
 
-# ----------------------------
-# 底部信息
-# ----------------------------
-st.markdown(
-    "<div style='text-align:center; font-size:0.9em; color:gray;'>Built with ❤️ using Pinecone + OpenAI + Streamlit</div>",
-    unsafe_allow_html=True
-)
+            # 初始化 Pinecone
+            pc = get_pinecone_client(PINECONE_API_KEY)
+            index = pc.Index(PINECONE_INDEX_NAME)
+
+            # 🔍 执行语义搜索
+            pinecone_results = index.query(
+                vector=query_vector,
+                top_k=top_k,
+                include_metadata=True
+            )
+
+            if len(pinecone_results.matches) == 0:
+                answer_text = "No results found in Pinecone index."
+            else:
+                # 将搜索结果格式化为文本
+                answer_text = "### 🔎 Semantic Search Results\n\n"
+                for rank, match in enumerate(pinecone_results.matches, start=1):
+                    meta = match.metadata or {}
+                    answer_text += (
+                        f"**{rank}. {meta.get('title', 'Unknown Title')}** "
+                        f"(Score: {match.score:.4f})\n"
+                        f"- Genre: {meta.get('genre', 'N/A')}\n"
+                        f"- Year: {meta.get('year', 'N/A')}\n"
+                        f"- Box Office: {meta.get('box-office', 'N/A')}\n"
+                        f"- Summary: {meta.get('summary', 'N/A')[:250]}...\n\n"
+                    )
+        except Exception as e:
+            answer_text = f"⚠️ Error searching Pinecone: {e}"
+
+    st.chat_message("assistant").markdown(answer_text)
+    current_chat.append({"role": "assistant", "content": answer_text})
