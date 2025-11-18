@@ -5,9 +5,7 @@ from openai import AzureOpenAI
 from pinecone import Pinecone
 from datetime import datetime
 
-# ===============================================================
-# 📌 页面配置 & 样式
-# ===============================================================
+# Page Configuration: //
 st.set_page_config(page_title="RAG Semantic Search Chat", layout="wide")
 
 st.markdown("""
@@ -36,8 +34,7 @@ textarea {
 st.image("Logo_USTBusinessSchool.svg", width=120)
 
 # ===============================================================
-# 📌 初始化状态管理
-# ===============================================================
+# define Initial Session:
 def init_session():
     defaults = {
         "page": "home",
@@ -52,29 +49,27 @@ def init_session():
 
 init_session()
 
-# ===============================================================
-# 📌 Azure + Pinecone 初始化
-# ===============================================================
+# Initializing Azure and Pinecone
 @st.cache_resource
 def get_azure_client(api_key):
     return AzureOpenAI(
         api_key=api_key,
-        api_version="2023-05-15",
+        api_version="2023-05-15", 
         azure_endpoint="https://hkust.azure-api.net"
     )
+#version from File from Marcela
 
 PINECONE_API_KEY = "pcsk_JPQMS_zQZ9MfrD4aSEe8b69PoxsjcsvoSPEHpzgYGt4GPm8bv7ED95Wjy4u7vPmxSnjj"
 PINECONE_INDEX_NAME = "msba-lab-1537"
 PINECONE_NAMESPACE = "default"
+# Pinecone API of Greta, self generated Database of movie describtions.
 
 @st.cache_resource
 def get_pinecone_client():
     pc = Pinecone(api_key=PINECONE_API_KEY)
     return pc.Index(PINECONE_INDEX_NAME)
 
-# ===============================================================
-# 🧠 语义搜索函数 (Semantic Search)
-# ===============================================================
+# Semantic Search
 def semantic_search(user_query: str, openai_client, top_k: int = 10):
     """
     使用 Azure OpenAI embedding + Pinecone 向量检索，实现语义搜索
