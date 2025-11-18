@@ -5,7 +5,7 @@ from openai import AzureOpenAI
 from pinecone import Pinecone
 from datetime import datetime
 
-# Page Configuration: //
+# Configure Streamlit page layout — title and width. //Jayson
 st.set_page_config(page_title="RAG Semantic Search Chat", layout="wide")
 
 st.markdown("""
@@ -31,10 +31,10 @@ textarea {
 </style>
 """, unsafe_allow_html=True)
 
+# HKUST Business Logo! //Jayson
 st.image("Logo_USTBusinessSchool.svg", width=120)
 
-
-# define Initial Session:
+# initialize session variables to store state between UI interactions://Jayson
 def init_session():
     defaults = {
         "page": "home",
@@ -49,7 +49,7 @@ def init_session():
 
 init_session()
 
-# Initializing Azure and Pinecone, version from File from Marcela
+# Initializing Azure and Pinecone, The API key needs to be entered manually,API version from Marcela's File //Erin
 @st.cache_resource
 def get_azure_client(api_key):
     return AzureOpenAI(
@@ -58,18 +58,17 @@ def get_azure_client(api_key):
         azure_endpoint="https://hkust.azure-api.net"
     )
 
-# Pinecone API of Greta, self generated Database of movie describtions.
+# Pinecone API of Greta, self generated Database of movie describtions. //Frank
 PINECONE_API_KEY = "pcsk_JPQMS_zQZ9MfrD4aSEe8b69PoxsjcsvoSPEHpzgYGt4GPm8bv7ED95Wjy4u7vPmxSnjj"
 PINECONE_INDEX_NAME = "msba-lab-1537"
 PINECONE_NAMESPACE = "default"
-
 
 @st.cache_resource
 def get_pinecone_client():
     pc = Pinecone(api_key=PINECONE_API_KEY)
     return pc.Index(PINECONE_INDEX_NAME)
 
-# Semantic Search
+# Semantic Search function, embedding //Erin
 def semantic_search(user_query: str, openai_client, top_k: int = 10):
     index = get_pinecone_client()
 
@@ -87,12 +86,12 @@ def semantic_search(user_query: str, openai_client, top_k: int = 10):
         include_values=False
     )
 
-    # Match only when score >0.75
+    # Match only when cos distance score >0.75
     filtered_matches = [m for m in search_resp.matches if m.score >= 0.75]
     return query_vector, filtered_matches
 
 
-# RAG Prompt, in case can't find a correct answer from our Pinecone index, we allows our App to search direct from GPT
+# RAG Prompt, in case can't find a correct answer from our Pinecone index, we allows our App to search direct from GPT //Alan
 def build_augmented_prompt(user_query: str, search_results) -> str:
     context_chunks = []
     for i, match in enumerate(search_results, 1):
@@ -157,7 +156,7 @@ def generate_contextual_ai_response(user_query: str, openai_client, top_k: int =
         return {
             "query": user_query,
             "answer": answer,
-            "confidence": confidence,
+            #"confidence": confidence,
             "sources": [m.metadata.get("source", f"Document {i+1}") for i, m in enumerate(matches)],
             "vector_dim": len(query_vec),
             "vector_sample": query_vec[:10],
@@ -204,7 +203,7 @@ if st.session_state.page == "home":
     st.title("Semantic Search for movie ideas")
     st.caption("Using this App for seeking inspiration for a screenplay")
 
-    user_query = st.text_area("Enter your question", placeholder="e.g., Give me a scenario with a legendary travel")
+    user_query = st.text_area("Enter your question", placeholder="e.g., Give me a scenario with a legendary travel or A film of young kids and their imaginary friends")
     col1, col2 = st.columns([1, 0.5])
 
     with col1:
@@ -257,7 +256,6 @@ if st.session_state.page == "result":
     st.markdown("---")
     st.markdown("Embedding + Search Info")
     st.metric("Embedding Dimension", result.get("vector_dim", 0))
-    st.metric("Confidence Score", result.get("confidence", 0))
     st.code(str(result.get("vector_sample", [])))
 
     col1, col2 = st.columns(2)
