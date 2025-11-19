@@ -8,7 +8,7 @@ from datetime import datetime
 #URL of our AI App: https://ustba-ai-team2-semanticsearch.streamlit.app/
 
 # Configure Streamlit page layout //Jayson & Greta
-st.set_page_config(page_title="RAG Semantic Search Chat", layout="centered")
+st.set_page_config(page_title="RAG Semantic Search Chat", layout="wide")
 
 st.markdown("""
 <style>
