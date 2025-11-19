@@ -13,6 +13,10 @@ st.set_page_config(page_title="RAG Semantic Search Chat", layout="centered")
 st.markdown("""
 <style>
 
+header[data-testid="stHeader"] {
+    background-color: #0E1117 !important;
+}
+
 body, [data-testid="stAppViewContainer"] {
     background-color: #0E1117 !important;
     color: #F5F5F5 !important;
