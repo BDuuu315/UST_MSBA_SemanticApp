@@ -5,8 +5,10 @@ from openai import AzureOpenAI
 from pinecone import Pinecone
 from datetime import datetime
 
+#URL of our AI App: https://ustba-ai-team2-semanticsearch.streamlit.app/
+
 # Configure Streamlit page layout //Jayson & Greta
-st.set_page_config(page_title="RAG Semantic Search Chat", layout="wide")
+st.set_page_config(page_title="RAG Semantic Search Chat", layout="centered")
 
 st.markdown("""
 <style>
@@ -58,7 +60,7 @@ def get_azure_client(api_key):
         azure_endpoint="https://hkust.azure-api.net"
     )
 
-# Pinecone API of Greta, self generated Database of movie describtions. //Frank
+# Pinecone API from Greta, self generated Database of movie describtions. //Frank
 PINECONE_API_KEY = "pcsk_JPQMS_zQZ9MfrD4aSEe8b69PoxsjcsvoSPEHpzgYGt4GPm8bv7ED95Wjy4u7vPmxSnjj"
 PINECONE_INDEX_NAME = "msba-lab-1537"
 PINECONE_NAMESPACE = "default"
@@ -91,7 +93,8 @@ def semantic_search(user_query: str, openai_client, top_k: int = 10):
     return query_vector, filtered_matches
 
 
-# RAG Prompt, in case can't find a correct answer from our Pinecone index, we allow our App to search direct from GPT //Alan & Erin
+# chunk text & RAG Prompt,
+# in case can't find a correct answer from our Pinecone index, we allow our App to search direct from GPT //Alan & Erin
 def build_augmented_prompt(user_query: str, search_results) -> str:
     context_chunks = []
     for i, match in enumerate(search_results, 1):
@@ -200,7 +203,7 @@ else:
 
 # Main Area (Search Page) //Greta & Jayson
 if st.session_state.page == "home":
-    st.title("Semantic Search for movie ideas")
+    st.title("Semantic Search for Movie Ideas")
     st.caption("Using this App for seeking inspiration for a screenplay")
 
     user_query = st.text_area("Enter your question", placeholder="e.g., Give me a scenario with a legendary travel / A film of young kids and their imaginary friends")
