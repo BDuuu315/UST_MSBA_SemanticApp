@@ -65,13 +65,12 @@ textarea {
 
 .stTextInput>div>div>input::placeholder,
 textarea::placeholder {
-    color: #B0B0B0 !important;   /* 稍亮灰色，清晰可见 */
+    color: #B0B0B0 !important;
 }
 .stTextInput label {
     color: #FFFFFF !important;
 }
 
-/* ======= 所有 Button 样式统一 ======= */
 .stButton>button {
     border-radius: 8px !important;
     font-weight: 600 !important;
@@ -81,7 +80,6 @@ textarea::placeholder {
 .stButton>button:hover {
     background-color: #FF6150 !important;
 }
-
 
 div[data-testid="stAlert"] {
     background-color: #1E222A !important;
@@ -99,11 +97,9 @@ code, pre, .stCodeBlock, .stTextArea textarea {
     padding: 0.6em !important;
 }
 
-
 [data-testid="stMetricValue"], [data-testid="stMetricLabel"] {
     color: #F5F5F5 !important;
 }
-
 
 table, th, td {
     background-color: #1A1D25 !important;
