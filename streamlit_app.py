@@ -243,7 +243,7 @@ if st.session_state.page == "home":
         st.session_state.page = "result"
         st.rerun()
 
-#Answering Page //Greta
+#Answering Page (Search answer + relevant document + embedding information)//Greta
 if st.session_state.page == "result":
     result = st.session_state.get("current_result", {})
 
