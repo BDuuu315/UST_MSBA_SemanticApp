@@ -68,6 +68,24 @@ textarea {
     background-color: #0E1117 !important;
     color: white !important;
 }
+
+div[data-testid="stAlert"] {
+    background-color: #1E222A !important;
+    color: #F5F5F5 !important;
+    border: 1px solid #333 !important;
+    border-radius: 6px !important;
+}
+
+/* st.code() 与 pre 样式统一暗灰 */
+code, pre, .stCodeBlock, .stTextArea textarea {
+    background-color: #1E222A !important;
+    color: #F5F5F5 !important;
+    border-radius: 6px !important;
+    padding: 0.6em !important;
+}
+
+
+
 </style>
 """, unsafe_allow_html=True)
 
