@@ -21,6 +21,36 @@ body, [data-testid="stAppViewContainer"] {
     background-color: #1A1D25 !important;  
     color: #F5F5F5 !important;             
 }
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3,
+[data-testid="stSidebar"] h4,
+[data-testid="stSidebar"] h5,
+[data-testid="stSidebar"] p,
+[data-testid="stSidebar"] label {
+    color: #FFFFFF !important;
+}
+[data-testid="stSidebar"] .stTextInput > div > div > input {
+    background-color: #242830 !important;
+    color: white !important;
+    border: 1px solid #333 !important;
+}
+
+[data-testid="stSidebar"] .stButton>button {
+    background-color: #E74C3C !important;   /* Red accent for sidebar buttons */
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+}
+
+[data-testid="stSidebar"] .stButton>button:hover {
+    background-color: #FF6150 !important;   /* Hover highlight */
+    color: #fff !important;
+}
+
+
+
 
 h1, h2, h3, h4, h5 { color: #FFFFFF; }
 .stTextInput>div>div>input,
