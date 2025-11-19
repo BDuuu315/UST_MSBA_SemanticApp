@@ -19,7 +19,7 @@ body, [data-testid="stAppViewContainer"] {
 h1, h2, h3, h4, h5 { color: #FFFFFF; }
 .stTextInput>div>div>input,
 textarea {
-    background-color: #1E222A !important;
+    background-color: #1E222A;
     color: white !important;
 }
 .stButton>button {
