@@ -16,6 +16,12 @@ body, [data-testid="stAppViewContainer"] {
     background-color: #0E1117 !important;
     color: #F5F5F5 !important;
 }
+
+[data-testid="stSidebar"] {
+    background-color: #1A1D25 !important;  
+    color: #F5F5F5 !important;             
+}
+
 h1, h2, h3, h4, h5 { color: #FFFFFF; }
 .stTextInput>div>div>input,
 textarea {
