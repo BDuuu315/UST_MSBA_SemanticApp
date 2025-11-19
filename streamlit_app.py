@@ -25,6 +25,8 @@ textarea {
 .stButton>button {
     border-radius: 8px;
     font-weight: 600;
+    background-color: #0E1117 !important;
+    color: white !important;
 }
 .stButton>button[kind=primary] {
     background-color: #0E1117 !important;
