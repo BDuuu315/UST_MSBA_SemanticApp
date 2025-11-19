@@ -13,13 +13,13 @@ st.set_page_config(page_title="RAG Semantic Search Chat", layout="centered")
 st.markdown("""
 <style>
 body, [data-testid="stAppViewContainer"] {
-    background-color: #0E1117;
-    color: #F5F5F5;
+    background-color: #0E1117 !important;
+    color: #F5F5F5 !important;
 }
 h1, h2, h3, h4, h5 { color: #FFFFFF; }
 .stTextInput>div>div>input,
 textarea {
-    background-color: #1E222A;
+    background-color: #1E222A !important;
     color: white !important;
 }
 .stButton>button {
@@ -27,8 +27,8 @@ textarea {
     font-weight: 600;
 }
 .stButton>button[kind=primary] {
-    background-color: #0E1117;
-    color: white;
+    background-color: #0E1117 !important;
+    color: white !important;
 }
 </style>
 """, unsafe_allow_html=True)
