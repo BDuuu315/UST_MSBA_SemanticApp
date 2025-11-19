@@ -27,7 +27,7 @@ textarea {
     font-weight: 600;
 }
 .stButton>button[kind=primary] {
-    background-color: #E74C3C;
+    background-color: #0E1117;
     color: white;
 }
 </style>
