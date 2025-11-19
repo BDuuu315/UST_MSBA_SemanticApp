@@ -11,20 +11,13 @@ from datetime import datetime
 st.set_page_config(page_title="RAG Semantic Search Chat", layout="centered")
 
 st.markdown("""
-python
-
-运行
-
-st.markdown("""
 <style>
 
-/* ======= 全局背景与字体颜色 ======= */
 body, [data-testid="stAppViewContainer"] {
     background-color: #0E1117 !important;
     color: #F5F5F5 !important;
 }
 
-/* ======= Sidebar 样式 ======= */
 [data-testid="stSidebar"] {
     background-color: #1A1D25 !important;
     color: #F5F5F5 !important;
@@ -41,13 +34,11 @@ body, [data-testid="stAppViewContainer"] {
     color: #FFFFFF !important;
 }
 
-/* Sidebar 输入框 */
 [data-testid="stSidebar"] .stTextInput > div > div > input {
     background-color: #242830 !important;
     color: white !important;
 }
 
-/* Sidebar 按钮 */
 [data-testid="stSidebar"] .stButton>button {
     background-color: #E74C3C !important;
     color: white !important;
@@ -58,19 +49,16 @@ body, [data-testid="stAppViewContainer"] {
     color: #fff !important;
 }
 
-/* ======= 文本通用颜色统一 ======= */
 h1, h2, h3, h4, h5, label, p, span, div {
     color: #F5F5F5 !important;
 }
 
-/* ======= 输入框 + 文本框样式 ======= */
 .stTextInput>div>div>input,
 textarea {
     background-color: #1E222A !important;
     color: #FFFFFF !important;
 }
 
-/* Placeholder 文字颜色（修复过暗问题） */
 .stTextInput>div>div>input::placeholder,
 textarea::placeholder {
     color: #B0B0B0 !important;   /* 稍亮灰色，清晰可见 */
@@ -90,38 +78,35 @@ textarea::placeholder {
     background-color: #FF6150 !important;
 }
 
-/* ======= 修正 st.info() 白块问题 ======= */
-/* st.info / st.success / st.error / st.warning 统一背景深色 */
+
 div[data-testid="stAlert"] {
-    background-color: #1E222A !important;   /* 深色背景 */
+    background-color: #1E222A !important;
     color: #F5F5F5 !important;
 }
 
-/* 尤其是 info 框的原始蓝色背景，用更强选择器覆盖 */
 div[data-baseweb="notification"] {
     background-color: #1E222A !important;
     color: #F5F5F5 !important;
 }
 
-/* ======= Embedding 代码块 (st.code) 统一颜色 ======= */
 code, pre, .stCodeBlock, .stTextArea textarea {
     background-color: #1E222A !important;
     color: #F5F5F5 !important;
     padding: 0.6em !important;
 }
 
-/* ======= Metric (Embedding Dimension 数字) 颜色 ======= */
+
 [data-testid="stMetricValue"], [data-testid="stMetricLabel"] {
     color: #F5F5F5 !important;
 }
 
-/* ======= 表格统一暗色（如 st.dataframe 或 markdown 表格） ======= */
+
 table, th, td {
     background-color: #1A1D25 !important;
     color: #F5F5F5 !important;
 }
 
-/* ======= 滚动条颜色 ======= */
+
 ::-webkit-scrollbar {
     width: 8px;
 }
