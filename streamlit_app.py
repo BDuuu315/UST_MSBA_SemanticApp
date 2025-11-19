@@ -45,15 +45,12 @@ body, [data-testid="stAppViewContainer"] {
 [data-testid="stSidebar"] .stTextInput > div > div > input {
     background-color: #242830 !important;
     color: white !important;
-    border: 1px solid #333 !important;
 }
 
 /* Sidebar 按钮 */
 [data-testid="stSidebar"] .stButton>button {
     background-color: #E74C3C !important;
     color: white !important;
-    border: none !important;
-    border-radius: 8px !important;
     font-weight: 600 !important;
 }
 [data-testid="stSidebar"] .stButton>button:hover {
@@ -71,7 +68,6 @@ h1, h2, h3, h4, h5, label, p, span, div {
 textarea {
     background-color: #1E222A !important;
     color: #FFFFFF !important;
-    border: 1px solid #333 !important;
 }
 
 /* Placeholder 文字颜色（修复过暗问题） */
@@ -89,7 +85,6 @@ textarea::placeholder {
     font-weight: 600 !important;
     background-color: #E74C3C !important;
     color: white !important;
-    border: none !important;
 }
 .stButton>button:hover {
     background-color: #FF6150 !important;
@@ -100,22 +95,18 @@ textarea::placeholder {
 div[data-testid="stAlert"] {
     background-color: #1E222A !important;   /* 深色背景 */
     color: #F5F5F5 !important;
-    border: 1px solid #333 !important;
-    border-radius: 6px !important;
 }
 
 /* 尤其是 info 框的原始蓝色背景，用更强选择器覆盖 */
 div[data-baseweb="notification"] {
     background-color: #1E222A !important;
     color: #F5F5F5 !important;
-    border: 1px solid #333 !important;
 }
 
 /* ======= Embedding 代码块 (st.code) 统一颜色 ======= */
 code, pre, .stCodeBlock, .stTextArea textarea {
     background-color: #1E222A !important;
     color: #F5F5F5 !important;
-    border-radius: 6px !important;
     padding: 0.6em !important;
 }
 
@@ -128,7 +119,6 @@ code, pre, .stCodeBlock, .stTextArea textarea {
 table, th, td {
     background-color: #1A1D25 !important;
     color: #F5F5F5 !important;
-    border-color: #2C2C2C !important;
 }
 
 /* ======= 滚动条颜色 ======= */
@@ -137,7 +127,6 @@ table, th, td {
 }
 ::-webkit-scrollbar-thumb {
     background-color: #343A40 !important;
-    border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
     background-color: #555 !important;
